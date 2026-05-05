@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Suivi faits">
+<meta name="theme-color" content="#ffffff">
+<title>Suivi des faits</title>
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --surface-2: #faf9f5;
+    --border: #e5e3dc;
+    --border-strong: #c8c5bc;
+    --text: #1a1a1a;
+    --text-muted: #6b6b66;
+    --text-dim: #8a8882;
+    --accent: #2c5f8d;
+    --accent-hover: #1f4a73;
+    --accent-light: #dceaf5;
+    --positive: #1d9e75;
+    --positive-bg: #e1f5ee;
+    --positive-strong: #0f6e56;
+    --negative: #993c1d;
+    --negative-bg: #faece7;
+    --negative-strong: #712b13;
+    --sst: #b8860b;
+    --sst-bg: #fdf3d8;
+    --sst-strong: #8a6508;
+    --prod-color: #2c5f8d;
+    --prod-bg: #dceaf5;
+    --recep-color: #4a8b3c;
+    --recep-bg: #e3f1d8;
+    --gray-bg: #f1efe8;
+    --gray-text: #5f5e5a;
+    --yellow-bg: #faeeda;
+    --yellow-text: #854f0b;
+    --orange-bg: #f5d4b8;
+    --orange-text: #993c1d;
+    --red-bg: #fcebeb;
+    --red-text: #a32d2d;
+    --blue-bg: #e6f1fb;
+    --blue-text: #185fa5;
+    --green-bg: #eaf3de;
+    --green-text: #3b6d11;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --tap: 44px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { overflow-x: hidden; width: 100%; max-width: 100vw; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior-y: contain;
+  }
+
+  input, textarea, .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  header {
+    background: rgba(255, 255, 255, 0.96);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding-top: var(--safe-top);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-inner { padding: 12px 16px; }
+  .app-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+  }
+  .nav-btn {
+    min-height: var(--tap);
+    padding: 8px 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.12s;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .nav-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+  }
+  .nav-btn:active { transform: scale(0.97); }
+  .nav-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  main {
+    padding: 16px 16px;
+    padding-bottom: calc(var(--safe-bottom) + 32px);
+    min-height: calc(100vh - 100px);
+    min-height: calc(100dvh - 100px);
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title:first-child { margin-top: 0; }
+  .section-title svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    stroke-width: 2;
+  }
+  .section-title.with-bg-icon {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    margin-left: -4px;
+    margin-right: -4px;
+  }
+  .section-title.team-prod {
+    background: var(--prod-bg);
+    color: var(--prod-color);
+  }
+  .section-title.team-recep {
+    background: var(--recep-bg);
+    color: var(--recep-color);
+  }
+  .section-title.is-positive {
+    background: var(--positive-bg);
+    color: var(--positive-strong);
+  }
+  .section-title.is-comportement {
+    background: var(--negative-bg);
+    color: var(--negative-strong);
+  }
+  .section-title.is-sst {
+    background: var(--sst-bg);
+    color: var(--sst-strong);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ===== WIZARD ===== */
+  .wizard-progress {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .wizard-progress .dot {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .wizard-progress .dot.done { background: var(--accent); }
+  .wizard-progress .dot.current { background: var(--accent); }
+
+  .wizard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .wizard-back {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 4px 8px 0;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .wizard-back:disabled { opacity: 0.3; cursor: not-allowed; }
+  .wizard-step-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .wizard-summary {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    padding: 0 8px;
+  }
+  .wizard-summary strong { color: var(--text-muted); font-weight: 600; }
+
+  .step { display: none; animation: fadeIn 0.25s ease; }
+  .step.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .step-question {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .step-hint {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .choice-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .choice-grid.two-col { grid-template-columns: 1fr 1fr; }
+  .choice-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+  .choice-grid.cat-grid { grid-template-columns: 1fr 1fr; }
+
+  .choice {
+    min-height: 64px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.12s;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: var(--shadow);
+    line-height: 1.2;
+    gap: 10px;
+  }
+  .choice:active { transform: scale(0.97); }
+  .choice .label-main { font-size: 16px; font-weight: 600; }
+  .choice .label-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 2px;
+  }
+  .choice .choice-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .choice .choice-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke-width: 1.8;
+  }
+  .choice.has-icon {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  /* === Choix d'équipe === */
+  .team-choice {
+    min-height: 110px;
+    flex-direction: column;
+    gap: 10px;
+    border-width: 2px;
+    padding: 18px 14px;
+    justify-content: center;
+  }
+  .team-choice.production {
+    background: var(--prod-bg);
+    border-color: var(--prod-color);
+    color: var(--prod-color);
+  }
+  .team-choice.reception {
+    background: var(--recep-bg);
+    border-color: var(--recep-color);
+    color: var(--recep-color);
+  }
+  .team-choice .team-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  .team-choice.production .team-icon-circle { background: var(--prod-color); }
+  .team-choice.reception .team-icon-circle { background: var(--recep-color); }
+  .team-choice .team-icon-circle svg { width: 26px; height: 26px; stroke-width: 2; }
+  .team-choice .label-main { font-size: 17px; font-weight: 700; }
+
+  /* === Choix employé avec avatar coloré === */
+  .emp-choice {
+    justify-content: flex-start;
+    text-align: left;
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .emp-choice.production {
+    background: var(--prod-bg);
+    border-color: var(--prod-color);
+    color: var(--prod-color);
+  }
+  .emp-choice.reception {
+    background: var(--recep-bg);
+    border-color: var(--recep-color);
+    color: var(--recep-color);
+  }
+  .emp-choice .emp-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+    letter-spacing: -0.3px;
+  }
+  .emp-choice.production .emp-avatar { background: var(--prod-color); }
+  .emp-choice.reception .emp-avatar { background: var(--recep-color); }
+  .emp-choice .emp-name {
+    font-size: 15px;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  /* === Type Positif/Négatif === */
+  .type-choice {
+    min-height: 130px;
+    padding: 20px 12px;
+    border-radius: var(--radius);
+    flex-direction: column;
+    gap: 12px;
+    border-width: 2px;
+  }
+  .type-choice.positive {
+    background: var(--positive-bg);
+    border-color: var(--positive);
+    color: var(--positive-strong);
+  }
+  .type-choice.negative {
+    background: var(--negative-bg);
+    border-color: var(--negative);
+    color: var(--negative-strong);
+  }
+  .type-choice .icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  .type-choice.positive .icon-circle { background: var(--positive); }
+  .type-choice.negative .icon-circle { background: var(--negative); }
+  .type-choice .icon-circle svg { width: 30px; height: 30px; stroke-width: 3.5; }
+  .type-choice .label-main {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  /* === Sous-catégorie (Comportement / SST) === */
+  .subcat-choice {
+    min-height: 110px;
+    flex-direction: column;
+    gap: 10px;
+    border-width: 2px;
+    padding: 18px 14px;
+  }
+  .subcat-choice.comportement {
+    background: var(--negative-bg);
+    border-color: var(--negative);
+    color: var(--negative-strong);
+  }
+  .subcat-choice.sst {
+    background: var(--sst-bg);
+    border-color: var(--sst);
+    color: var(--sst-strong);
+  }
+  .subcat-choice .subcat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  .subcat-choice.comportement .subcat-icon { background: var(--negative); }
+  .subcat-choice.sst .subcat-icon { background: var(--sst); }
+  .subcat-choice .subcat-icon svg { width: 22px; height: 22px; stroke-width: 2; }
+  .subcat-choice .label-main { font-size: 16px; font-weight: 700; }
+  .subcat-choice .label-sub-count {
+    font-size: 11px;
+    color: currentColor;
+    opacity: 0.7;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  /* === Catégorie === */
+  .choice.cat-choice {
+    min-height: 64px;
+    font-size: 14px;
+    padding: 12px 12px;
+    line-height: 1.25;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 10px;
+  }
+  .choice.cat-choice .cat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+  .choice.cat-choice .cat-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+  }
+  .choice.cat-choice .cat-label {
+    flex: 1;
+    word-break: break-word;
+    font-weight: 600;
+  }
+  .choice.cat-choice.positive {
+    background: var(--positive-bg);
+    border-color: var(--positive);
+    color: var(--positive-strong);
+  }
+  .choice.cat-choice.positive .cat-icon { background: var(--positive); }
+  .choice.cat-choice.comportement {
+    background: var(--negative-bg);
+    border-color: var(--negative);
+    color: var(--negative-strong);
+  }
+  .choice.cat-choice.comportement .cat-icon { background: var(--negative); }
+  .choice.cat-choice.sst {
+    background: var(--sst-bg);
+    border-color: var(--sst);
+    color: var(--sst-strong);
+  }
+  .choice.cat-choice.sst .cat-icon { background: var(--sst); }
+
+  .choice.date-choice {
+    justify-content: flex-start;
+    text-align: left;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+  .choice.date-choice .date-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .choice.date-choice .date-icon svg { width: 22px; height: 22px; stroke-width: 2; }
+  .choice.date-choice .date-text { flex: 1; }
+  .choice.date-choice .label-main { font-size: 16px; font-weight: 700; }
+  .choice.date-choice .label-sub {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .choice.date-choice.date-other {
+    background: var(--surface-2);
+    border-style: dashed;
+    border-color: var(--border-strong);
+  }
+  .choice.date-choice.date-other .date-icon {
+    background: var(--accent);
+    color: white;
+  }
+  .choice.date-choice.date-other .label-main {
+    color: var(--accent);
+  }
+
+  .recap-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .recap-card .recap-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 0;
+  }
+  .recap-card .recap-row:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+  }
+  .recap-card .recap-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .recap-card .recap-value {
+    color: var(--text);
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+  }
+  .recap-card .recap-value.positive { color: var(--positive-strong); }
+  .recap-card .recap-value.negative { color: var(--negative-strong); }
+  .recap-card .recap-value.sst { color: var(--sst-strong); }
+
+  input[type="text"], input[type="date"], textarea, select {
+    width: 100%;
+    min-height: var(--tap);
+    padding: 11px 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    background: var(--surface);
+    font-family: inherit;
+    color: var(--text);
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(44, 95, 141, 0.15);
+  }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.4; }
+  select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%236b6b66' d='M3 5l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .btn {
+    min-height: var(--tap);
+    padding: 11px 18px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.12s;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    width: 100%;
+    min-height: 52px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-danger {
+    background: var(--red-bg);
+    border-color: var(--red-text);
+    color: var(--red-text);
+  }
+  .btn-small {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  .threshold-alert {
+    position: fixed;
+    top: calc(var(--safe-top) + 12px);
+    left: 12px;
+    right: 12px;
+    transform: translateY(-220%);
+    background: var(--negative-bg);
+    border: 2px solid var(--negative);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-align: center;
+  }
+  .threshold-alert.show { transform: translateY(0); }
+  .threshold-alert .title {
+    font-weight: 700;
+    color: var(--negative);
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .threshold-alert .message { color: var(--text); font-size: 14px; line-height: 1.4; }
+  .threshold-alert.severe { background: #ffd6d6; border-color: #a32d2d; }
+  .threshold-alert.severe .title { color: #a32d2d; }
+
+  .toast {
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 20px);
+    left: 50%;
+    transform: translateX(-50%) translateY(140px);
+    background: var(--text);
+    color: white;
+    padding: 12px 22px;
+    border-radius: 22px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .employee-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .employee-tile {
+    min-height: 64px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .employee-tile:active { transform: scale(0.97); }
+  .employee-tile.team-prod { border-color: var(--prod-color); background: var(--prod-bg); }
+  .employee-tile.team-recep { border-color: var(--recep-color); background: var(--recep-bg); }
+  .employee-tile .tile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    letter-spacing: -0.3px;
+  }
+  .employee-tile.team-prod .tile-avatar { background: var(--prod-color); }
+  .employee-tile.team-recep .tile-avatar { background: var(--recep-color); }
+  .employee-tile .tile-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .employee-tile .tile-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .employee-tile.team-prod .tile-name { color: var(--prod-color); }
+  .employee-tile.team-recep .tile-name { color: var(--recep-color); }
+  .employee-tile .tile-team {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .employee-tile.inactive { opacity: 0.5; background: var(--surface); border-color: var(--border); }
+  .employee-tile.inactive .tile-avatar { background: var(--text-dim); }
+  .employee-tile.inactive .tile-name { color: var(--text-muted); }
+  .employee-tile.inactive .tile-name::after {
+    content: " (inactif)";
+    font-weight: 400;
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+
+  .summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .summary-card {
+    padding: 16px 12px;
+    border-radius: var(--radius);
+    text-align: center;
+  }
+  .summary-card.positive { background: var(--positive-bg); color: var(--green-text); }
+  .summary-card.negative { background: var(--negative-bg); color: var(--negative); }
+  .summary-card .num { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .summary-card .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  .cat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    min-height: 48px;
+  }
+  .cat-row .cat-name { font-weight: 500; font-size: 14px; flex: 1; min-width: 0; word-break: break-word; }
+  .cat-row .cat-name .subcat-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    vertical-align: 1px;
+  }
+  .cat-row .cat-name .subcat-tag.comportement {
+    background: var(--negative-bg);
+    color: var(--negative-strong);
+  }
+  .cat-row .cat-name .subcat-tag.sst {
+    background: var(--sst-bg);
+    color: var(--sst-strong);
+  }
+  .cat-row .cat-count {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    min-width: 36px;
+    text-align: center;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .level-gray { background: var(--gray-bg); color: var(--gray-text); }
+  .level-yellow { background: var(--yellow-bg); color: var(--yellow-text); }
+  .level-orange { background: var(--orange-bg); color: var(--orange-text); }
+  .level-red { background: var(--red-bg); color: var(--red-text); }
+  .level-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .level-green { background: var(--green-bg); color: var(--green-text); }
+  .cat-row.has-warn { border-left: 4px solid; }
+  .cat-row.has-warn.level-yellow { border-left-color: #ba7517; }
+  .cat-row.has-warn.level-orange { border-left-color: #993c1d; }
+  .cat-row.has-warn.level-red { border-left-color: #a32d2d; }
+
+  .history-item {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    background: var(--surface);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .history-item .meta { flex: 1; min-width: 0; }
+  .history-item .top-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .history-item .date { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+  .history-item .type-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .history-item .type-badge.positive { background: var(--positive-bg); color: var(--green-text); }
+  .history-item .type-badge.negative.comportement { background: var(--negative-bg); color: var(--negative); }
+  .history-item .type-badge.negative.sst { background: var(--sst-bg); color: var(--sst-strong); }
+  .history-item .cat { font-weight: 500; font-size: 14px; width: 100%; }
+  .history-item .remark {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  .history-item .team {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 2px;
+  }
+  .history-item .delete-btn {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .history-item .delete-btn:active {
+    background: var(--red-bg);
+    border-color: var(--red-text);
+    color: var(--red-text);
+  }
+  .history-item .delete-btn svg { width: 16px; height: 16px; }
+
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .settings-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-tab {
+    flex: 1;
+    min-height: 44px;
+    padding: 10px 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .settings-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .settings-panel { display: none; }
+  .settings-panel.active { display: block; }
+
+  .list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    background: var(--surface);
+    gap: 8px;
+    min-height: 56px;
+  }
+  .list-row.team-prod {
+    background: var(--prod-bg);
+    border-color: var(--prod-color);
+  }
+  .list-row.team-prod .name { color: var(--prod-color); }
+  .list-row.team-recep {
+    background: var(--recep-bg);
+    border-color: var(--recep-color);
+  }
+  .list-row.team-recep .name { color: var(--recep-color); }
+  .list-row.cat-positive {
+    background: var(--positive-bg);
+    border-color: var(--positive);
+  }
+  .list-row.cat-positive .name { color: var(--positive-strong); }
+  .list-row.cat-comportement {
+    background: var(--negative-bg);
+    border-color: var(--negative);
+  }
+  .list-row.cat-comportement .name { color: var(--negative-strong); }
+  .list-row.cat-sst {
+    background: var(--sst-bg);
+    border-color: var(--sst);
+  }
+  .list-row.cat-sst .name { color: var(--sst-strong); }
+  .list-row .info { flex: 1; min-width: 0; }
+  .list-row .name { font-weight: 600; font-size: 14px; word-break: break-word; }
+  .list-row .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .list-row.inactive {
+    opacity: 0.5;
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .list-row.inactive .name { color: var(--text-muted); }
+
+  .add-form { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+  .add-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .add-form-row.three { grid-template-columns: 1fr 1fr auto; }
+
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    background: var(--surface);
+    -webkit-overflow-scrolling: touch;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    cursor: pointer;
+    min-height: 40px;
+  }
+  .checkbox-row input { width: 20px; height: 20px; min-height: 20px; flex-shrink: 0; }
+  .checkbox-row span { font-size: 14px; }
+  .checkbox-row.inactive span { color: var(--text-dim); font-style: italic; }
+
+  .date-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
+  .empty-state { text-align: center; padding: 24px 16px; color: var(--text-muted); font-size: 14px; }
+  .small-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+    padding-bottom: calc(20px + var(--safe-bottom));
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 22px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .modal p { font-size: 14px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.4; }
+  .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  @media (min-width: 600px) {
+    main { max-width: 700px; margin: 0 auto; padding: 24px 24px calc(var(--safe-bottom) + 32px); }
+    .header-inner { max-width: 700px; margin: 0 auto; }
+    .nav-btn { font-size: 14px; }
+    .employee-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .add-form-row.three { grid-template-columns: 1fr 1fr 1fr auto; }
+    .date-row { grid-template-columns: 1fr 1fr; }
+    .checkbox-grid { grid-template-columns: 1fr 1fr; }
+    .choice-grid.cat-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="app-title">Suivi des faits</div>
+    <nav>
+      <button class="nav-btn active" data-page="declare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        <span>Déclarer</span>
+      </button>
+      <button class="nav-btn" data-page="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M7 14l4-4 4 4 5-5"/>
+        </svg>
+        <span>Rapports</span>
+      </button>
+      <button class="nav-btn" data-page="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Paramètres</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ PAGE 1 — DÉCLARER (WIZARD) ============ -->
+  <section id="page-declare" class="page active">
+
+    <div class="wizard-progress" id="wizard-progress"></div>
+
+    <div class="wizard-header">
+      <button class="wizard-back" id="wizard-back" disabled>‹ Retour</button>
+      <span class="wizard-step-label" id="wizard-step-label">Étape 1</span>
+      <span style="width: 60px;"></span>
+    </div>
+
+    <!-- ÉTAPE : Équipe -->
+    <div class="step" data-step="team">
+      <h2 class="step-question">Quelle équipe ?</h2>
+      <div class="step-hint">Choisis l'équipe de l'employé concerné.</div>
+      <div class="choice-grid two-col">
+        <button class="choice team-choice production" data-team="production">
+          <div class="team-icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <span class="label-main">Production</span>
+        </button>
+        <button class="choice team-choice reception" data-team="reception">
+          <div class="team-icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="6" width="14" height="11" rx="1"/>
+              <path d="M15 9h4l3 4v4h-7"/>
+              <circle cx="6" cy="18" r="2"/>
+              <circle cx="18" cy="18" r="2"/>
+            </svg>
+          </div>
+          <span class="label-main">Réception</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ÉTAPE : Employé -->
+    <div class="step" data-step="employee">
+      <h2 class="step-question">Quel employé ?</h2>
+      <div class="step-hint" id="step-employee-hint">Choisis dans l'équipe sélectionnée.</div>
+      <div class="choice-grid two-col" id="employee-choices"></div>
+    </div>
+
+    <!-- ÉTAPE : Type -->
+    <div class="step" data-step="type">
+      <h2 class="step-question">Type de fait ?</h2>
+      <div class="step-hint">Positif ou négatif.</div>
+      <div class="choice-grid two-col">
+        <button class="choice type-choice positive" data-type="positive">
+          <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </div>
+          <span class="label-main">Positif</span>
+        </button>
+        <button class="choice type-choice negative" data-type="negative">
+          <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/>
+            </svg>
+          </div>
+          <span class="label-main">Négatif</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ÉTAPE : Sous-catégorie (négatif uniquement) -->
+    <div class="step" data-step="subcategory">
+      <h2 class="step-question">Quelle nature ?</h2>
+      <div class="step-hint">Comportement ou sécurité au travail (SST).</div>
+      <div class="choice-grid two-col">
+        <button class="choice subcat-choice comportement" data-subcat="comportement">
+          <div class="subcat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+            </svg>
+          </div>
+          <span class="label-main">Comportement</span>
+        </button>
+        <button class="choice subcat-choice sst" data-subcat="sst">
+          <div class="subcat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <span class="label-main">SST</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ÉTAPE : Catégorie -->
+    <div class="step" data-step="category">
+      <h2 class="step-question">Quelle catégorie ?</h2>
+      <div class="step-hint" id="step-category-hint">Choisis le fait observé.</div>
+      <div class="choice-grid cat-grid" id="category-choices"></div>
+    </div>
+
+    <!-- ÉTAPE : Date -->
+    <div class="step" data-step="date">
+      <h2 class="step-question">Quand ?</h2>
+      <div class="step-hint">Date du fait observé.</div>
+      <div class="choice-grid">
+        <button class="choice date-choice" data-date="0">
+          <div class="date-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="date-text">
+            <div class="label-main">Aujourd'hui</div>
+            <div class="label-sub" id="date-today"></div>
+          </div>
+        </button>
+        <button class="choice date-choice" data-date="1">
+          <div class="date-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+          </div>
+          <div class="date-text">
+            <div class="label-main">Hier</div>
+            <div class="label-sub" id="date-yesterday"></div>
+          </div>
+        </button>
+        <button class="choice date-choice" data-date="2">
+          <div class="date-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M12 7v5l3 2"/>
+            </svg>
+          </div>
+          <div class="date-text">
+            <div class="label-main">Avant-hier</div>
+            <div class="label-sub" id="date-before-yesterday"></div>
+          </div>
+        </button>
+        <button class="choice date-choice date-other" id="date-other-btn">
+          <div class="date-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="date-text">
+            <div class="label-main">Autre date</div>
+            <div class="label-sub">Choisir dans le calendrier</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Sélecteur date natif (caché, ouvert par "Autre date") -->
+      <div id="custom-date-picker" style="display: none; margin-top: 14px;">
+        <label>Sélectionner une date</label>
+        <input type="date" id="custom-date-input">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+          <button class="btn" id="custom-date-cancel">Annuler</button>
+          <button class="btn btn-primary" id="custom-date-confirm" style="min-height: 44px;">Valider</button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px; text-align: center;">
+          Date maximum : aujourd'hui
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE : Remarque + sauvegarder -->
+    <div class="step" data-step="save">
+      <h2 class="step-question">Une remarque ?</h2>
+      <div class="step-hint">Note brève, factuelle, sans jugement. Optionnel.</div>
+
+      <div class="recap-card" id="recap-card"></div>
+
+      <textarea id="remark-input" placeholder="Ex. : 12 minutes de retard, pas d'excuse donnée…"></textarea>
+
+      <div style="margin-top: 14px;">
+        <button class="btn btn-primary" id="save-btn">Sauvegarder</button>
+      </div>
+    </div>
+
+    <div class="wizard-summary" id="wizard-summary"></div>
+
+  </section>
+
+  <!-- ============ PAGE 2 — RAPPORTS ============ -->
+  <section id="page-reports" class="page">
+    <div id="reports-list-view">
+      <h1 class="page-title">Rapports</h1>
+      <div class="card">
+        <div class="section-title with-bg-icon team-prod">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Production
+        </div>
+        <div class="employee-grid" id="report-prod-grid"></div>
+        <div class="section-title with-bg-icon team-recep">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="6" width="14" height="11" rx="1"/>
+            <path d="M15 9h4l3 4v4h-7"/>
+            <circle cx="6" cy="18" r="2"/>
+            <circle cx="18" cy="18" r="2"/>
+          </svg>
+          Réception
+        </div>
+        <div class="employee-grid" id="report-recep-grid"></div>
+      </div>
+    </div>
+
+    <div id="reports-detail-view" style="display: none;">
+      <button class="back-btn" id="back-to-reports">‹ Retour</button>
+      <h1 class="page-title" id="report-employee-name">Employé</h1>
+      <div id="report-content"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 3 — PARAMÈTRES ============ -->
+  <section id="page-settings" class="page">
+    <h1 class="page-title">Paramètres</h1>
+
+    <div class="settings-tabs">
+      <button class="settings-tab active" data-panel="employees">Employés</button>
+      <button class="settings-tab" data-panel="categories">Catégories</button>
+      <button class="settings-tab" data-panel="export">Partager</button>
+    </div>
+
+    <div class="settings-panel active" id="panel-employees">
+      <div class="card">
+        <div class="section-title with-bg-icon team-prod">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Production
+        </div>
+        <div id="settings-prod-list"></div>
+        <div class="section-title with-bg-icon team-recep">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="6" width="14" height="11" rx="1"/>
+            <path d="M15 9h4l3 4v4h-7"/>
+            <circle cx="6" cy="18" r="2"/>
+            <circle cx="18" cy="18" r="2"/>
+          </svg>
+          Réception
+        </div>
+        <div id="settings-recep-list"></div>
+
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Ajouter un employé
+        </div>
+        <div class="add-form">
+          <input type="text" id="new-emp-name" placeholder="Nom" autocapitalize="words">
+          <div class="add-form-row three">
+            <select id="new-emp-team">
+              <option value="production">Production</option>
+              <option value="reception">Réception</option>
+            </select>
+            <button class="btn" id="add-emp-btn">Ajouter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-panel" id="panel-categories">
+      <div class="card">
+        <div class="section-title with-bg-icon is-positive">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Positives
+        </div>
+        <div id="settings-pos-cats"></div>
+        <div class="section-title with-bg-icon is-comportement">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+          </svg>
+          Comportement
+        </div>
+        <div id="settings-comportement-cats"></div>
+        <div class="section-title with-bg-icon is-sst">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          SST — Sécurité
+        </div>
+        <div id="settings-sst-cats"></div>
+
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Ajouter une catégorie
+        </div>
+        <div class="add-form">
+          <input type="text" id="new-cat-name" placeholder="Nom" autocapitalize="sentences">
+          <div class="add-form-row three">
+            <select id="new-cat-type">
+              <option value="positive">Positive</option>
+              <option value="comportement">Négative — Comportement</option>
+              <option value="sst">Négative — SST</option>
+            </select>
+            <button class="btn" id="add-cat-btn">Ajouter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-panel" id="panel-export">
+      <div class="card">
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Employés
+        </div>
+        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+          <button class="btn btn-small" id="select-all-emp" style="flex:1;">Tout cocher</button>
+          <button class="btn btn-small" id="unselect-all-emp" style="flex:1;">Tout décocher</button>
+        </div>
+        <div class="checkbox-grid" id="export-emp-list"></div>
+
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Période
+        </div>
+        <div class="date-row">
+          <div>
+            <div class="small-label">Début</div>
+            <input type="date" id="export-date-start">
+          </div>
+          <div>
+            <div class="small-label">Fin</div>
+            <input type="date" id="export-date-end">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="export-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px; vertical-align:-3px; margin-right:6px; stroke-width:2.5;">
+            <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/>
+            <path d="M16 6l-4-4-4 4"/>
+            <path d="M12 2v14"/>
+          </svg>
+          Partager / Télécharger CSV
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="threshold-alert" id="threshold-alert">
+  <div class="title" id="threshold-title">Seuil atteint</div>
+  <div class="message" id="threshold-message"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">Confirmer</h3>
+    <p id="confirm-message">Êtes-vous sûr ?</p>
+    <div class="modal-actions">
+      <button class="btn" id="confirm-cancel">Annuler</button>
+      <button class="btn btn-danger" id="confirm-ok">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'suivi_faits_v2';
+
+const DEFAULT_DATA = {
+  employees: [
+    { id: 'e1', name: 'Adel', team: 'production', active: true },
+    { id: 'e2', name: 'Caroline', team: 'production', active: true },
+    { id: 'e3', name: 'Martine', team: 'production', active: true },
+    { id: 'e4', name: 'J-Yves', team: 'production', active: true },
+    { id: 'e5', name: 'Mohamed', team: 'production', active: true },
+    { id: 'e6', name: 'Daniel', team: 'reception', active: true },
+    { id: 'e7', name: 'J-François', team: 'reception', active: true },
+    { id: 'e8', name: 'J-Pierre', team: 'reception', active: true },
+    { id: 'e9', name: 'Jorge', team: 'reception', active: true },
+    { id: 'e10', name: 'René', team: 'reception', active: true },
+    { id: 'e11', name: 'Jaissy', team: 'reception', active: true }
+  ],
+  categories: [
+    // Négatives - Comportement
+    { id: 'cb1', name: 'Retard / Départ', type: 'negative', subcategory: 'comportement', active: true },
+    { id: 'cb2', name: 'Absence', type: 'negative', subcategory: 'comportement', active: true },
+    { id: 'cb3', name: 'Punch', type: 'negative', subcategory: 'comportement', active: true },
+    { id: 'cb4', name: 'Tag / Scan', type: 'negative', subcategory: 'comportement', active: true },
+    { id: 'cb5', name: 'Pause', type: 'negative', subcategory: 'comportement', active: true },
+    { id: 'cb6', name: 'Communication', type: 'negative', subcategory: 'comportement', active: true },
+    // Négatives - SST
+    { id: 'cs1', name: 'Cellulaire / Écouteurs', type: 'negative', subcategory: 'sst', active: true },
+    { id: 'cs2', name: 'Stop / Klaxon', type: 'negative', subcategory: 'sst', active: true },
+    { id: 'cs3', name: 'Dégâts', type: 'negative', subcategory: 'sst', active: true },
+    { id: 'cs4', name: 'Chemins non respectés', type: 'negative', subcategory: 'sst', active: true },
+    { id: 'cs5', name: 'Négligence SST', type: 'negative', subcategory: 'sst', active: true },
+    // Positives
+    { id: 'cp1', name: 'Solution', type: 'positive', subcategory: null, active: true },
+    { id: 'cp2', name: 'Communication', type: 'positive', subcategory: null, active: true },
+    { id: 'cp3', name: 'Initiative', type: 'positive', subcategory: null, active: true },
+    { id: 'cp4', name: 'Aide', type: 'positive', subcategory: null, active: true },
+    { id: 'cp5', name: 'Amélioration', type: 'positive', subcategory: null, active: true },
+    { id: 'cp6', name: 'Alerte SST', type: 'positive', subcategory: null, active: true },
+    { id: 'cp7', name: 'Good job', type: 'positive', subcategory: null, active: true },
+    { id: 'cp8', name: 'Problème remonté', type: 'positive', subcategory: null, active: true }
+  ],
+  facts: []
+};
+
+let data = loadData();
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      const d = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      saveData(d);
+      return d;
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
+function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d || data)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+function isoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function dateMinusDays(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return isoDate(d);
+}
+function formatDateFR(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function formatDateShort(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() - offset);
+  const days = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${days[d.getDay()]} ${dd}/${mm}`;
+}
+function formatDateLongFromIso(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const days = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${days[d.getDay()]} ${dd}/${mm}`;
+}
+function subcatLabel(s) {
+  return s === 'comportement' ? 'Comportement' : 'SST';
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.dataset.page;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${page}`).classList.add('active');
+    if (page === 'reports') renderReportsList();
+    if (page === 'settings') renderSettings();
+    window.scrollTo(0, 0);
+  });
+});
+
+/* =========================================================
+   WIZARD — étapes dynamiques selon type positif/négatif
+   ========================================================= */
+const wizard = {
+  team: null,
+  employeeId: null,
+  type: null,
+  subcategory: null, // 'comportement' | 'sst' | null (positif)
+  categoryId: null,
+  dateOffset: null,
+  customDate: null, // ISO YYYY-MM-DD si dateOffset === 'custom'
+  history: [] // pile des étapes visitées pour le bouton retour
+};
+
+// Étapes possibles dans l'ordre logique
+const POS_STEPS = ['team', 'employee', 'type', 'category', 'date', 'save'];
+const NEG_STEPS = ['team', 'employee', 'type', 'subcategory', 'category', 'date', 'save'];
+
+function currentSteps() {
+  return wizard.type === 'negative' ? NEG_STEPS : POS_STEPS;
+}
+
+function goToStep(stepName, addToHistory = true) {
+  if (addToHistory && wizard.history[wizard.history.length - 1] !== stepName) {
+    wizard.history.push(stepName);
+  }
+
+  document.querySelectorAll('.step').forEach(s => {
+    s.classList.toggle('active', s.dataset.step === stepName);
+  });
+
+  // Progress bar
+  const steps = currentSteps();
+  const totalSteps = steps.length;
+  const idx = steps.indexOf(stepName);
+  const progressContainer = document.getElementById('wizard-progress');
+  progressContainer.innerHTML = '';
+  for (let i = 0; i < totalSteps; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    if (i < idx) dot.classList.add('done');
+    if (i === idx) dot.classList.add('current');
+    progressContainer.appendChild(dot);
+  }
+
+  // Header
+  document.getElementById('wizard-step-label').textContent = `Étape ${idx + 1} / ${totalSteps}`;
+  document.getElementById('wizard-back').disabled = (wizard.history.length <= 1);
+
+  // Préparer chaque étape
+  if (stepName === 'employee') renderEmployeeChoices();
+  if (stepName === 'category') renderCategoryChoices();
+  if (stepName === 'date') updateDateLabels();
+  if (stepName === 'save') renderRecap();
+
+  renderWizardSummary(stepName);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function renderWizardSummary(stepName) {
+  const el = document.getElementById('wizard-summary');
+  if (stepName === 'team' || stepName === 'save') {
+    el.innerHTML = '';
+    return;
+  }
+  const parts = [];
+  if (wizard.team) parts.push(`<strong>${wizard.team === 'production' ? 'Production' : 'Réception'}</strong>`);
+  if (wizard.employeeId) {
+    const emp = data.employees.find(e => e.id === wizard.employeeId);
+    if (emp) parts.push(emp.name);
+  }
+  if (wizard.type) {
+    parts.push(wizard.type === 'positive'
+      ? '<strong style="color:var(--positive-strong)">Positif</strong>'
+      : '<strong style="color:var(--negative-strong)">Négatif</strong>');
+  }
+  if (wizard.subcategory) {
+    const color = wizard.subcategory === 'sst' ? 'var(--sst-strong)' : 'var(--negative-strong)';
+    parts.push(`<strong style="color:${color}">${subcatLabel(wizard.subcategory)}</strong>`);
+  }
+  if (wizard.categoryId) {
+    const cat = data.categories.find(c => c.id === wizard.categoryId);
+    if (cat) parts.push(cat.name);
+  }
+  el.innerHTML = parts.length ? parts.join(' · ') : '';
+}
+
+function resetWizard() {
+  wizard.team = null;
+  wizard.employeeId = null;
+  wizard.type = null;
+  wizard.subcategory = null;
+  wizard.categoryId = null;
+  wizard.dateOffset = null;
+  wizard.customDate = null;
+  wizard.history = [];
+  document.getElementById('remark-input').value = '';
+  document.getElementById('custom-date-picker').style.display = 'none';
+  goToStep('team');
+}
+
+document.getElementById('wizard-back').addEventListener('click', () => {
+  if (wizard.history.length > 1) {
+    wizard.history.pop();
+    const prev = wizard.history[wizard.history.length - 1];
+    goToStep(prev, false);
+  }
+});
+
+// === ÉQUIPE ===
+document.querySelectorAll('[data-team]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newTeam = btn.dataset.team;
+    if (wizard.team !== newTeam) wizard.employeeId = null;
+    wizard.team = newTeam;
+    goToStep('employee');
+  });
+});
+
+// === EMPLOYÉ ===
+function getInitials(name) {
+  // Si le prénom est composé (avec tiret ou espace), prendre l'initiale de chaque partie
+  // Ex: "J-François" → "JF", "Jean-Pierre" → "JP", "J-Yves" → "JY"
+  // Sinon : juste la première lettre. Ex: "Adel" → "A"
+  const parts = name.trim().split(/[\s\-]+/).filter(p => p.length > 0);
+  if (parts.length >= 2) {
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+  }
+  return parts[0].charAt(0).toUpperCase();
+}
+
+function renderEmployeeChoices() {
+  const container = document.getElementById('employee-choices');
+  const hint = document.getElementById('step-employee-hint');
+  container.innerHTML = '';
+  if (!wizard.team) return;
+
+  const list = data.employees.filter(e => e.team === wizard.team && e.active);
+  hint.textContent = `Équipe ${wizard.team === 'production' ? 'Production' : 'Réception'} — ${list.length} employé${list.length > 1 ? 's' : ''}.`;
+
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state">Aucun employé actif.</div>';
+    return;
+  }
+  list.forEach(emp => {
+    const btn = document.createElement('button');
+    btn.className = 'choice emp-choice ' + emp.team;
+    btn.innerHTML = `
+      <div class="emp-avatar">${escapeHTML(getInitials(emp.name))}</div>
+      <span class="emp-name">${escapeHTML(emp.name)}</span>
+    `;
+    btn.addEventListener('click', () => {
+      wizard.employeeId = emp.id;
+      goToStep('type');
+    });
+    container.appendChild(btn);
+  });
+}
+
+// === TYPE ===
+document.querySelectorAll('[data-type]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newType = btn.dataset.type;
+    if (wizard.type !== newType) {
+      wizard.subcategory = null;
+      wizard.categoryId = null;
+    }
+    wizard.type = newType;
+    if (newType === 'negative') {
+      goToStep('subcategory');
+    } else {
+      goToStep('category');
+    }
+  });
+});
+
+// === SOUS-CATÉGORIE (négatif uniquement) ===
+document.querySelectorAll('[data-subcat]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newSubcat = btn.dataset.subcat;
+    if (wizard.subcategory !== newSubcat) wizard.categoryId = null;
+    wizard.subcategory = newSubcat;
+    goToStep('category');
+  });
+});
+
+// === CATÉGORIE ===
+// Banque d'icônes SVG par nom de catégorie (path uniquement)
+const CATEGORY_ICONS = {
+  // Comportement
+  'Retard / Départ': '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  // Smiley yeux en croix (visage avec X X et bouche neutre)
+  'Absence': '<circle cx="12" cy="12" r="10"/><line x1="7" y1="7" x2="10" y2="10"/><line x1="10" y1="7" x2="7" y2="10"/><line x1="14" y1="7" x2="17" y2="10"/><line x1="17" y1="7" x2="14" y2="10"/><line x1="8" y1="16" x2="16" y2="16"/>',
+  'Punch': '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 14l2 2 4-4"/>',
+  // Code-barres pour Tag / Scan
+  'Tag / Scan': '<line x1="3" y1="5" x2="3" y2="19"/><line x1="6" y1="5" x2="6" y2="19"/><line x1="9" y1="5" x2="9" y2="19"/><line x1="13" y1="5" x2="13" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="20" y1="5" x2="20" y2="19"/>',
+  'Pause': '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+  'Communication': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  // SST
+  'Cellulaire / Écouteurs': '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  // Panneau STOP : octogone avec barre horizontale
+  'Stop / Klaxon': '<polygon points="7.5 3 16.5 3 21 7.5 21 16.5 16.5 21 7.5 21 3 16.5 3 7.5"/><line x1="8" y1="12" x2="16" y2="12"/>',
+  // Explosion (étoile à pointes irrégulières façon BD)
+  'Dégâts': '<polygon points="12 2 14 7 19 5 17 10 22 12 17 14 19 19 14 17 12 22 10 17 5 19 7 14 2 12 7 10 5 5 10 7"/>',
+  // Triangle avec point d'exclamation
+  'Chemins non respectés': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  // Smiley choqué (gros yeux ronds + bouche ovale)
+  'Négligence SST': '<circle cx="12" cy="12" r="10"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/><ellipse cx="12" cy="16" rx="2" ry="2.5"/>',
+  // Positives
+  // Ampoule pour Solution
+  'Solution': '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2v1h6v-1c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/>',
+  'Initiative': '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+  // Cœur pour Aide
+  'Aide': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  // Engrenage pour Amélioration
+  'Amélioration': '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  'Alerte SST': '<path d="M12 2L2 22h20L12 2z"/><path d="M12 9v5M12 17h.01"/>',
+  'Good job': '<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>',
+  'Problème remonté': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 8v4M12 16h.01"/>'
+};
+const DEFAULT_CAT_ICON = '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>';
+
+function getCatIconSVG(catName) {
+  const path = CATEGORY_ICONS[catName] || DEFAULT_CAT_ICON;
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+}
+
+function renderCategoryChoices() {
+  const container = document.getElementById('category-choices');
+  const hint = document.getElementById('step-category-hint');
+  container.innerHTML = '';
+
+  let cats = [];
+  let cssClass = '';
+  if (wizard.type === 'positive') {
+    cats = data.categories.filter(c => c.type === 'positive' && c.active);
+    cssClass = 'positive';
+    hint.textContent = `Type positif — ${cats.length} catégorie${cats.length > 1 ? 's' : ''}.`;
+  } else if (wizard.type === 'negative') {
+    cats = data.categories.filter(c => c.type === 'negative' && c.subcategory === wizard.subcategory && c.active);
+    cssClass = wizard.subcategory;
+    hint.textContent = `${subcatLabel(wizard.subcategory)} — ${cats.length} catégorie${cats.length > 1 ? 's' : ''}.`;
+  }
+
+  if (!cats.length) {
+    container.innerHTML = '<div class="empty-state">Aucune catégorie active.</div>';
+    return;
+  }
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'choice cat-choice ' + cssClass;
+    btn.innerHTML = `
+      <div class="cat-icon">${getCatIconSVG(cat.name)}</div>
+      <span class="cat-label">${escapeHTML(cat.name)}</span>
+    `;
+    btn.addEventListener('click', () => {
+      wizard.categoryId = cat.id;
+      goToStep('date');
+    });
+    container.appendChild(btn);
+  });
+}
+
+// === DATE ===
+function updateDateLabels() {
+  document.getElementById('date-today').textContent = formatDateShort(0);
+  document.getElementById('date-yesterday').textContent = formatDateShort(1);
+  document.getElementById('date-before-yesterday').textContent = formatDateShort(2);
+  // S'assurer que le picker est fermé en arrivant sur l'étape
+  document.getElementById('custom-date-picker').style.display = 'none';
+  // Limites du sélecteur natif (max = aujourd'hui, min = il y a 90 jours)
+  const today = new Date();
+  const maxStr = isoDate(today);
+  const min = new Date();
+  min.setDate(today.getDate() - 90);
+  const minStr = isoDate(min);
+  const inp = document.getElementById('custom-date-input');
+  inp.max = maxStr;
+  inp.min = minStr;
+  if (!inp.value) inp.value = maxStr;
+}
+document.querySelectorAll('[data-date]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    wizard.dateOffset = parseInt(btn.dataset.date, 10);
+    wizard.customDate = null;
+    goToStep('save');
+  });
+});
+
+// Bouton "Autre date" : afficher le sélecteur natif
+document.getElementById('date-other-btn').addEventListener('click', () => {
+  document.getElementById('custom-date-picker').style.display = 'block';
+  // Petit scroll pour amener le picker dans le viewport
+  setTimeout(() => {
+    document.getElementById('custom-date-picker').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+});
+
+document.getElementById('custom-date-cancel').addEventListener('click', () => {
+  document.getElementById('custom-date-picker').style.display = 'none';
+});
+
+document.getElementById('custom-date-confirm').addEventListener('click', () => {
+  const val = document.getElementById('custom-date-input').value;
+  if (!val) {
+    showToast('Choisis une date');
+    return;
+  }
+  // Sécurité : pas de date future
+  const today = isoDate(new Date());
+  if (val > today) {
+    showToast('La date ne peut pas être dans le futur');
+    return;
+  }
+  wizard.dateOffset = 'custom';
+  wizard.customDate = val;
+  goToStep('save');
+});
+
+// === RECAP + SAUVEGARDER ===
+function renderRecap() {
+  const emp = data.employees.find(e => e.id === wizard.employeeId);
+  const cat = data.categories.find(c => c.id === wizard.categoryId);
+
+  let typeRecap = '';
+  if (wizard.type === 'positive') {
+    typeRecap = `<span class="recap-value positive">➕ Positif</span>`;
+  } else if (wizard.subcategory === 'sst') {
+    typeRecap = `<span class="recap-value sst">⚠️ Négatif — SST</span>`;
+  } else {
+    typeRecap = `<span class="recap-value negative">➖ Négatif — Comportement</span>`;
+  }
+
+  // Affichage date
+  let dateRecap = '';
+  if (wizard.dateOffset === 'custom' && wizard.customDate) {
+    dateRecap = `${formatDateFR(wizard.customDate)} <span style="color:var(--text-dim); font-weight:500;">(${formatDateLongFromIso(wizard.customDate)})</span>`;
+  } else {
+    const dateLabels = ['Aujourd\'hui', 'Hier', 'Avant-hier'];
+    dateRecap = `${dateLabels[wizard.dateOffset]} <span style="color:var(--text-dim); font-weight:500;">(${formatDateShort(wizard.dateOffset)})</span>`;
+  }
+
+  document.getElementById('recap-card').innerHTML = `
+    <div class="recap-row">
+      <span class="recap-label">Employé</span>
+      <span class="recap-value">${escapeHTML(emp ? emp.name : '?')} <span style="color:var(--text-dim); font-weight:500;">(${wizard.team === 'production' ? 'Prod.' : 'Réc.'})</span></span>
+    </div>
+    <div class="recap-row">
+      <span class="recap-label">Type</span>
+      ${typeRecap}
+    </div>
+    <div class="recap-row">
+      <span class="recap-label">Catégorie</span>
+      <span class="recap-value">${escapeHTML(cat ? cat.name : '?')}</span>
+    </div>
+    <div class="recap-row">
+      <span class="recap-label">Date</span>
+      <span class="recap-value">${dateRecap}</span>
+    </div>
+  `;
+}
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  if (wizard.dateOffset === null) return;
+
+  // Calcule la date ISO à enregistrer
+  let factDate;
+  if (wizard.dateOffset === 'custom' && wizard.customDate) {
+    factDate = wizard.customDate;
+  } else {
+    factDate = dateMinusDays(wizard.dateOffset);
+  }
+
+  const fact = {
+    id: uid(),
+    employeeId: wizard.employeeId,
+    team: wizard.team,
+    type: wizard.type,
+    subcategory: wizard.subcategory,
+    categoryId: wizard.categoryId,
+    date: factDate,
+    remark: document.getElementById('remark-input').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  data.facts.push(fact);
+  saveData();
+
+  if (navigator.vibrate) navigator.vibrate(20);
+
+  if (fact.type === 'negative') {
+    const count = data.facts.filter(f =>
+      f.employeeId === fact.employeeId &&
+      f.categoryId === fact.categoryId &&
+      f.type === 'negative'
+    ).length;
+    if (count === 5 || count === 10 || count === 15) {
+      const emp = data.employees.find(e => e.id === fact.employeeId);
+      const cat = data.categories.find(c => c.id === fact.categoryId);
+      showThresholdAlert(count, emp ? emp.name : '?', cat ? cat.name : '?');
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+    } else {
+      showToast('Fait enregistré');
+    }
+  } else {
+    showToast('Fait enregistré');
+  }
+
+  resetWizard();
+});
+
+function showThresholdAlert(count, name, cat) {
+  const el = document.getElementById('threshold-alert');
+  document.getElementById('threshold-title').textContent = `Seuil de ${count} faits atteint`;
+  document.getElementById('threshold-message').textContent =
+    `${name} : ${count} faits négatifs en « ${cat} ».`;
+  el.classList.toggle('severe', count >= 15);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 6000);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+/* =========================================================
+   PAGE 2 — RAPPORTS
+   ========================================================= */
+function renderReportsList() {
+  document.getElementById('reports-list-view').style.display = 'block';
+  document.getElementById('reports-detail-view').style.display = 'none';
+
+  const prod = document.getElementById('report-prod-grid');
+  const rec = document.getElementById('report-recep-grid');
+  prod.innerHTML = '';
+  rec.innerHTML = '';
+
+  const sortedEmps = [...data.employees].sort((a, b) => {
+    if (a.active !== b.active) return a.active ? -1 : 1;
+    return a.name.localeCompare(b.name, 'fr');
+  });
+
+  sortedEmps.forEach(emp => {
+    const tile = document.createElement('button');
+    const teamClass = emp.team === 'production' ? 'team-prod' : 'team-recep';
+    tile.className = 'employee-tile ' + teamClass;
+    if (!emp.active) tile.classList.add('inactive');
+    tile.innerHTML = `
+      <div class="tile-avatar">${escapeHTML(getInitials(emp.name))}</div>
+      <div class="tile-info">
+        <div class="tile-name">${escapeHTML(emp.name)}</div>
+        <div class="tile-team">${emp.team === 'production' ? 'Production' : 'Réception'}</div>
+      </div>
+    `;
+    tile.addEventListener('click', () => showEmployeeReport(emp.id));
+    if (emp.team === 'production') prod.appendChild(tile);
+    else rec.appendChild(tile);
+  });
+
+  if (!prod.children.length) prod.innerHTML = '<div class="empty-state">Aucun employé.</div>';
+  if (!rec.children.length) rec.innerHTML = '<div class="empty-state">Aucun employé.</div>';
+}
+
+function showEmployeeReport(empId) {
+  const emp = data.employees.find(e => e.id === empId);
+  if (!emp) return;
+
+  document.getElementById('reports-list-view').style.display = 'none';
+  document.getElementById('reports-detail-view').style.display = 'block';
+  document.getElementById('report-employee-name').textContent =
+    emp.name + (emp.active ? '' : ' (inactif)');
+
+  const facts = data.facts.filter(f => f.employeeId === empId);
+  const positiveCount = facts.filter(f => f.type === 'positive').length;
+  const negativeCount = facts.filter(f => f.type === 'negative').length;
+
+  const content = document.getElementById('report-content');
+  content.innerHTML = '';
+
+  const summary = document.createElement('div');
+  summary.className = 'summary-row';
+  summary.innerHTML = `
+    <div class="summary-card positive">
+      <div class="num">${positiveCount}</div>
+      <div class="lbl">Positifs</div>
+    </div>
+    <div class="summary-card negative">
+      <div class="num">${negativeCount}</div>
+      <div class="lbl">Négatifs</div>
+    </div>`;
+  content.appendChild(summary);
+
+  // === Négatifs Comportement ===
+  const compFacts = facts.filter(f => f.type === 'negative' && f.subcategory === 'comportement');
+  const compCard = document.createElement('div');
+  compCard.className = 'card';
+  compCard.innerHTML = `<div class="section-title with-bg-icon is-comportement">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+    </svg>
+    Comportement
+  </div>`;
+  appendCategoryBreakdown(compCard, compFacts, 'comportement');
+  content.appendChild(compCard);
+
+  // === Négatifs SST ===
+  const sstFacts = facts.filter(f => f.type === 'negative' && f.subcategory === 'sst');
+  const sstCard = document.createElement('div');
+  sstCard.className = 'card';
+  sstCard.innerHTML = `<div class="section-title with-bg-icon is-sst">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/>
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+    SST — Sécurité
+  </div>`;
+  appendCategoryBreakdown(sstCard, sstFacts, 'sst');
+  content.appendChild(sstCard);
+
+  // === Positifs ===
+  const posFacts = facts.filter(f => f.type === 'positive');
+  const posCard = document.createElement('div');
+  posCard.className = 'card';
+  posCard.innerHTML = `<div class="section-title with-bg-icon is-positive">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    Faits positifs
+  </div>`;
+  const posCats = {};
+  posFacts.forEach(f => { posCats[f.categoryId] = (posCats[f.categoryId] || 0) + 1; });
+  const posEntries = Object.entries(posCats).sort((a, b) => b[1] - a[1]);
+  if (!posEntries.length) {
+    posCard.innerHTML += '<div class="empty-state" style="padding: 12px;">Aucun fait positif.</div>';
+  } else {
+    posEntries.forEach(([catId, count]) => {
+      const cat = data.categories.find(c => c.id === catId);
+      const name = cat ? cat.name : '(supprimée)';
+      const lvl = positiveLevel(count);
+      const row = document.createElement('div');
+      row.className = 'cat-row';
+      row.innerHTML = `
+        <span class="cat-name">${escapeHTML(name)}${cat && !cat.active ? ' <span style="font-size:10px; color: var(--text-dim);">(inactive)</span>' : ''}</span>
+        <span class="cat-count ${lvl}">${count}</span>`;
+      posCard.appendChild(row);
+    });
+  }
+  content.appendChild(posCard);
+
+  // === Historique ===
+  const histCard = document.createElement('div');
+  histCard.className = 'card';
+  histCard.innerHTML = `<div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+    Historique
+  </div>`;
+
+  const sortedFacts = [...facts].sort((a, b) => {
+    if (b.date !== a.date) return b.date.localeCompare(a.date);
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  });
+
+  if (!sortedFacts.length) {
+    histCard.innerHTML += '<div class="empty-state" style="padding: 12px;">Aucun fait enregistré.</div>';
+  } else {
+    sortedFacts.forEach(f => {
+      const cat = data.categories.find(c => c.id === f.categoryId);
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      let badgeClass = 'positive';
+      let badgeText = 'Positif';
+      if (f.type === 'negative') {
+        badgeClass = 'negative ' + (f.subcategory || 'comportement');
+        badgeText = f.subcategory === 'sst' ? 'SST' : 'Comport.';
+      }
+      item.innerHTML = `
+        <div class="meta">
+          <div class="top-line">
+            <span class="date">${formatDateFR(f.date)}</span>
+            <span class="type-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div class="cat selectable">${escapeHTML(cat ? cat.name : '(catégorie supprimée)')}</div>
+          <div class="team">${f.team === 'production' ? 'Production' : 'Réception'}</div>
+          ${f.remark ? `<div class="remark selectable">${escapeHTML(f.remark)}</div>` : ''}
+        </div>
+        <button class="delete-btn" data-fact-id="${f.id}" aria-label="Supprimer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          </svg>
+        </button>`;
+      item.querySelector('.delete-btn').addEventListener('click', () => {
+        confirmAction(
+          'Confirmer la suppression ?',
+          'Ce fait sera définitivement supprimé. Cette action est irréversible.',
+          () => {
+            data.facts = data.facts.filter(x => x.id !== f.id);
+            saveData();
+            showEmployeeReport(empId);
+            showToast('Fait supprimé');
+          }
+        );
+      });
+      histCard.appendChild(item);
+    });
+  }
+  content.appendChild(histCard);
+
+  window.scrollTo(0, 0);
+}
+
+function appendCategoryBreakdown(card, facts, subcat) {
+  const cats = {};
+  facts.forEach(f => { cats[f.categoryId] = (cats[f.categoryId] || 0) + 1; });
+  const entries = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    card.innerHTML += '<div class="empty-state" style="padding: 12px;">Aucun fait.</div>';
+    return;
+  }
+  entries.forEach(([catId, count]) => {
+    const cat = data.categories.find(c => c.id === catId);
+    const name = cat ? cat.name : '(supprimée)';
+    const lvl = negativeLevel(count);
+    const row = document.createElement('div');
+    row.className = `cat-row ${lvl !== 'level-gray' ? 'has-warn ' + lvl : ''}`;
+    row.innerHTML = `
+      <span class="cat-name">${escapeHTML(name)}${cat && !cat.active ? ' <span style="font-size:10px; color: var(--text-dim);">(inactive)</span>' : ''}</span>
+      <span class="cat-count ${lvl}">${count}</span>`;
+    card.appendChild(row);
+  });
+}
+
+document.getElementById('back-to-reports').addEventListener('click', renderReportsList);
+
+function negativeLevel(n) {
+  if (n >= 15) return 'level-red';
+  if (n >= 10) return 'level-orange';
+  if (n >= 5) return 'level-yellow';
+  return 'level-gray';
+}
+function positiveLevel(n) {
+  if (n >= 10) return 'level-green';
+  if (n >= 5) return 'level-blue';
+  return 'level-gray';
+}
+
+/* =========================================================
+   PAGE 3 — PARAMÈTRES
+   ========================================================= */
+document.querySelectorAll('.settings-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${tab.dataset.panel}`).classList.add('active');
+    renderSettings();
+  });
+});
+
+function renderSettings() {
+  renderEmployeesPanel();
+  renderCategoriesPanel();
+  renderExportPanel();
+}
+
+function renderEmployeesPanel() {
+  const prodList = document.getElementById('settings-prod-list');
+  const recList = document.getElementById('settings-recep-list');
+  prodList.innerHTML = '';
+  recList.innerHTML = '';
+
+  const sorted = [...data.employees].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  sorted.forEach(emp => {
+    const row = document.createElement('div');
+    const teamClass = emp.team === 'production' ? 'team-prod' : 'team-recep';
+    row.className = 'list-row ' + teamClass + (emp.active ? '' : ' inactive');
+    row.innerHTML = `
+      <div class="info">
+        <div class="name">${escapeHTML(emp.name)}</div>
+        <div class="sub">${emp.active ? 'Actif' : 'Inactif'}</div>
+      </div>
+      <button class="btn btn-small">${emp.active ? 'Désactiver' : 'Réactiver'}</button>`;
+    row.querySelector('button').addEventListener('click', () => {
+      emp.active = !emp.active;
+      saveData();
+      renderEmployeesPanel();
+    });
+    if (emp.team === 'production') prodList.appendChild(row);
+    else recList.appendChild(row);
+  });
+
+  if (!prodList.children.length) prodList.innerHTML = '<div class="empty-state" style="padding:12px;">Aucun employé.</div>';
+  if (!recList.children.length) recList.innerHTML = '<div class="empty-state" style="padding:12px;">Aucun employé.</div>';
+}
+
+document.getElementById('add-emp-btn').addEventListener('click', () => {
+  const nameInput = document.getElementById('new-emp-name');
+  const teamSel = document.getElementById('new-emp-team');
+  const name = nameInput.value.trim();
+  if (!name) { showToast('Nom requis'); return; }
+  data.employees.push({ id: uid(), name: name, team: teamSel.value, active: true });
+  saveData();
+  nameInput.value = '';
+  renderEmployeesPanel();
+  showToast('Employé ajouté');
+});
+
+function renderCategoriesPanel() {
+  const posList = document.getElementById('settings-pos-cats');
+  const compList = document.getElementById('settings-comportement-cats');
+  const sstList = document.getElementById('settings-sst-cats');
+  posList.innerHTML = '';
+  compList.innerHTML = '';
+  sstList.innerHTML = '';
+
+  data.categories.forEach(cat => {
+    const row = document.createElement('div');
+    let colorClass = 'cat-positive';
+    if (cat.type === 'negative' && cat.subcategory === 'comportement') colorClass = 'cat-comportement';
+    else if (cat.type === 'negative' && cat.subcategory === 'sst') colorClass = 'cat-sst';
+    row.className = 'list-row ' + colorClass + (cat.active ? '' : ' inactive');
+    row.innerHTML = `
+      <div class="info">
+        <div class="name">${escapeHTML(cat.name)}</div>
+        <div class="sub">${cat.active ? 'Active' : 'Inactive'}</div>
+      </div>
+      <button class="btn btn-small">${cat.active ? 'Désactiver' : 'Réactiver'}</button>`;
+    row.querySelector('button').addEventListener('click', () => {
+      cat.active = !cat.active;
+      saveData();
+      renderCategoriesPanel();
+    });
+    if (cat.type === 'positive') posList.appendChild(row);
+    else if (cat.subcategory === 'comportement') compList.appendChild(row);
+    else if (cat.subcategory === 'sst') sstList.appendChild(row);
+  });
+
+  if (!posList.children.length) posList.innerHTML = '<div class="empty-state" style="padding:12px;">Aucune catégorie.</div>';
+  if (!compList.children.length) compList.innerHTML = '<div class="empty-state" style="padding:12px;">Aucune catégorie.</div>';
+  if (!sstList.children.length) sstList.innerHTML = '<div class="empty-state" style="padding:12px;">Aucune catégorie.</div>';
+}
+
+document.getElementById('add-cat-btn').addEventListener('click', () => {
+  const nameInput = document.getElementById('new-cat-name');
+  const typeSel = document.getElementById('new-cat-type');
+  const name = nameInput.value.trim();
+  if (!name) { showToast('Nom requis'); return; }
+
+  let cat;
+  if (typeSel.value === 'positive') {
+    cat = { id: uid(), name: name, type: 'positive', subcategory: null, active: true };
+  } else if (typeSel.value === 'comportement') {
+    cat = { id: uid(), name: name, type: 'negative', subcategory: 'comportement', active: true };
+  } else {
+    cat = { id: uid(), name: name, type: 'negative', subcategory: 'sst', active: true };
+  }
+
+  data.categories.push(cat);
+  saveData();
+  nameInput.value = '';
+  renderCategoriesPanel();
+  showToast('Catégorie ajoutée');
+});
+
+function renderExportPanel() {
+  const list = document.getElementById('export-emp-list');
+  list.innerHTML = '';
+  const sorted = [...data.employees].sort((a, b) => {
+    if (a.team !== b.team) return a.team.localeCompare(b.team);
+    return a.name.localeCompare(b.name, 'fr');
+  });
+  sorted.forEach(emp => {
+    const lbl = document.createElement('label');
+    lbl.className = 'checkbox-row' + (emp.active ? '' : ' inactive');
+    lbl.innerHTML = `
+      <input type="checkbox" value="${emp.id}" checked>
+      <span>${escapeHTML(emp.name)} <span style="font-size:11px; color: var(--text-dim);">(${emp.team === 'production' ? 'Prod' : 'Réc'}${emp.active ? '' : ', inactif'})</span></span>`;
+    list.appendChild(lbl);
+  });
+
+  const today = new Date();
+  const start = new Date();
+  start.setDate(today.getDate() - 90);
+  if (!document.getElementById('export-date-start').value) {
+    document.getElementById('export-date-start').value = isoDate(start);
+  }
+  if (!document.getElementById('export-date-end').value) {
+    document.getElementById('export-date-end').value = isoDate(today);
+  }
+}
+
+document.getElementById('select-all-emp').addEventListener('click', () => {
+  document.querySelectorAll('#export-emp-list input').forEach(cb => cb.checked = true);
+});
+document.getElementById('unselect-all-emp').addEventListener('click', () => {
+  document.querySelectorAll('#export-emp-list input').forEach(cb => cb.checked = false);
+});
+
+document.getElementById('export-btn').addEventListener('click', async () => {
+  const checked = Array.from(document.querySelectorAll('#export-emp-list input:checked')).map(cb => cb.value);
+  if (!checked.length) { showToast('Sélectionner au moins un employé'); return; }
+  const dateStart = document.getElementById('export-date-start').value;
+  const dateEnd = document.getElementById('export-date-end').value;
+  if (!dateStart || !dateEnd) { showToast('Renseigner les deux dates'); return; }
+  if (dateStart > dateEnd) { showToast('Date de début après date de fin'); return; }
+
+  const filtered = data.facts.filter(f =>
+    checked.includes(f.employeeId) && f.date >= dateStart && f.date <= dateEnd
+  );
+  if (!filtered.length) { showToast('Aucun fait pour ces critères'); return; }
+
+  filtered.sort((a, b) => a.date.localeCompare(b.date));
+
+  const headers = ['Date', 'Employé', 'Équipe', 'Type', 'Sous-catégorie', 'Catégorie', 'Remarque'];
+  const rows = filtered.map(f => {
+    const emp = data.employees.find(e => e.id === f.employeeId);
+    const cat = data.categories.find(c => c.id === f.categoryId);
+    let subcatLbl = '';
+    if (f.type === 'negative') {
+      subcatLbl = f.subcategory === 'sst' ? 'SST' : 'Comportement';
+    }
+    return [
+      formatDateFR(f.date),
+      emp ? emp.name : '(supprimé)',
+      f.team === 'production' ? 'Production' : 'Réception',
+      f.type === 'positive' ? 'Positif' : 'Négatif',
+      subcatLbl,
+      cat ? cat.name : '(catégorie supprimée)',
+      f.remark || ''
+    ];
+  });
+
+  const escapeCSV = (s) => {
+    s = String(s);
+    if (s.includes(';') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+  const csvLines = [headers.map(escapeCSV).join(';')];
+  rows.forEach(r => csvLines.push(r.map(escapeCSV).join(';')));
+  const csv = '\uFEFF' + csvLines.join('\r\n');
+
+  const filename = `faits_employes_${dateStart}_${dateEnd}.csv`;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+  try {
+    const file = new File([blob], filename, { type: 'text/csv' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Suivi des faits — Export',
+        text: `Export du ${dateStart} au ${dateEnd}`
+      });
+      showToast(`${filtered.length} fait${filtered.length > 1 ? 's' : ''} partagé${filtered.length > 1 ? 's' : ''}`);
+      return;
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`${filtered.length} fait${filtered.length > 1 ? 's' : ''} exporté${filtered.length > 1 ? 's' : ''}`);
+});
+
+let confirmCallback = null;
+function confirmAction(title, message, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = message;
+  confirmCallback = onOk;
+  document.getElementById('confirm-modal').classList.add('show');
+}
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('show');
+  confirmCallback = null;
+});
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('show');
+  if (confirmCallback) {
+    const cb = confirmCallback;
+    confirmCallback = null;
+    cb();
+  }
+});
+document.getElementById('confirm-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'confirm-modal') {
+    document.getElementById('confirm-modal').classList.remove('show');
+    confirmCallback = null;
+  }
+});
+
+function escapeHTML(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+// Init
+goToStep('team');
+</script>
+</body>
+</html>
