@@ -74,7 +74,7 @@
   }
   .header-inner { padding: 12px 16px; }
   .app-title { font-size: 16px; font-weight: 600; color: var(--text); text-align: center; margin-bottom: 12px; }
-  nav { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
   .nav-btn {
     min-height: var(--tap); padding: 8px 6px; border: 1px solid var(--border); background: var(--surface);
     border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-muted);
@@ -372,20 +372,21 @@
   .modal .field { margin-bottom: 14px; }
 
 
-  /* Historique compact + sélection multiple */
-  .history-item { min-height: 82px; align-items: center; padding: 10px 10px 10px 14px; cursor: pointer; }
-  .history-item .meta { display: grid; grid-template-rows: auto auto; gap: 5px; overflow: hidden; }
-  .history-item .top-line { display: flex; align-items: baseline; gap: 8px; margin: 0; flex-wrap: nowrap; min-width: 0; }
-  .history-item .date { font-size: 14px; flex-shrink: 0; }
-  .history-item .cat { font-size: 14px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .history-item.pos-border .cat { color: var(--positive-strong); }
-  .history-item.neg-border .cat { color: var(--negative-strong); }
-  .history-item .remark { margin: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); }
-  .history-item .item-actions { flex-direction: row; gap: 5px; }
-  .history-item .act-btn { width: 36px; height: 36px; }
-  .history-item .act-btn svg { width: 15px; height: 15px; }
-  .report-col .col-row.active-filter { box-shadow: inset 0 0 0 1px currentColor; }
-  .comment-modal-text { white-space: pre-wrap; user-select: text; -webkit-user-select: text; color: var(--text); font-size: 15px; line-height: 1.5; margin: 14px 0 18px; }
+  /* Nouvelle vue rapports */
+  .report-person-header { display:grid;grid-template-columns:38px 44px minmax(0,1fr) 44px 38px;align-items:center;gap:4px;margin:8px 0 16px; }
+  .report-person-header h1 { margin:0;text-align:center;font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .report-total { font-size:28px;font-weight:800;text-align:center;line-height:1; }
+  .report-total.neg { color:var(--negative); } .report-total.pos { color:var(--positive-strong); }
+  .report-arrow { width:38px;height:44px;border:0;background:transparent;color:var(--accent);font-size:38px;line-height:1;cursor:pointer;font-family:inherit; }
+  .history-item { min-height:82px;align-items:center;padding:10px 10px 10px 14px;cursor:pointer; }
+  .history-item .meta { display:grid;grid-template-rows:auto auto;gap:5px;overflow:hidden; }
+  .history-item .top-line { display:flex;align-items:baseline;gap:8px;margin:0;flex-wrap:nowrap;min-width:0; }
+  .history-item .date { font-size:14px;flex-shrink:0; }
+  .history-item .cat { font-size:14px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-item.pos-border .cat { color:var(--positive-strong); } .history-item.neg-border .cat { color:var(--negative-strong); }
+  .history-item .remark { margin:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted); }
+  .history-item .item-actions { flex-direction:row;gap:5px; } .history-item .act-btn { width:36px;height:36px; }
+  .comment-modal-text { white-space:pre-wrap;user-select:text;-webkit-user-select:text;color:var(--text);font-size:15px;line-height:1.5;margin:14px 0 18px; }
 
   @media (min-width: 600px) {
     main { max-width: 700px; margin: 0 auto; padding: 24px 24px calc(var(--safe-bottom) + 32px); }
@@ -420,6 +421,12 @@
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
         <span>Paramètres</span>
+      </button>
+      <button class="nav-btn" data-page="backups">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h12l4 4v12H4z"/><path d="M8 4v6h8V4"/><path d="M8 20v-6h8v6"/>
+        </svg>
+        <span>Sauvegardes</span>
       </button>
     </nav>
   </div>
@@ -489,8 +496,13 @@
     </div>
 
     <div id="reports-detail-view" style="display: none;">
-      <button class="back-btn" id="back-to-reports">‹ Retour</button>
-      <h1 class="page-title" id="report-employee-name">Employé</h1>
+      <div class="report-person-header">
+        <button class="report-arrow" id="prev-employee" aria-label="Employé précédent">‹</button>
+        <span class="report-total neg" id="report-neg-total">0</span>
+        <h1 id="report-employee-name">Employé</h1>
+        <span class="report-total pos" id="report-pos-total">0</span>
+        <button class="report-arrow" id="next-employee" aria-label="Employé suivant">›</button>
+      </div>
       <div id="report-content"></div>
     </div>
   </section>
@@ -501,7 +513,6 @@
     <div class="settings-tabs">
       <button class="settings-tab active" data-panel="employees">Employés</button>
       <button class="settings-tab" data-panel="categories">Catégories</button>
-      <button class="settings-tab" data-panel="export">Partager</button>
     </div>
 
     <div class="settings-panel active" id="panel-employees">
@@ -547,46 +558,36 @@
       </div>
     </div>
 
-    <div class="settings-panel" id="panel-export">
-      <div class="card">
-        <div class="section-title">Employés</div>
-        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-          <button class="btn btn-small" id="select-all-emp" style="flex:1;">Tout cocher</button>
-          <button class="btn btn-small" id="unselect-all-emp" style="flex:1;">Tout décocher</button>
-        </div>
-        <div class="checkbox-grid" id="export-emp-list"></div>
 
-        <div class="section-title">Période</div>
-        <div class="date-row">
-          <div><div class="small-label">Début</div><input type="date" id="export-date-start"></div>
-          <div><div class="small-label">Fin</div><input type="date" id="export-date-end"></div>
-        </div>
+  </section>
 
-        <button class="btn btn-primary" id="export-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px; vertical-align:-3px; margin-right:6px; stroke-width:2.5;">
-            <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/>
-          </svg>
-          Partager / Télécharger CSV
-        </button>
-
-        <div class="section-title">Sauvegarde et restauration</div>
-        <div class="small-label" id="backup-status">Aucune sauvegarde hebdomadaire enregistrée.</div>
-        <button class="btn btn-primary" id="backup-json-btn" style="margin-top:8px;">Télécharger une sauvegarde JSON</button>
-        <div style="margin-top:12px;">
-          <label>Mode d’importation</label>
-          <select id="import-mode">
-            <option value="merge">Fusionner avec les données actuelles</option>
-            <option value="replace">Remplacer toutes les données</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-          <button class="btn" id="import-csv-btn">Importer CSV</button>
-          <button class="btn" id="import-json-btn">Importer JSON</button>
-        </div>
-        <input type="file" id="import-csv-input" accept=".csv,text/csv" hidden>
-        <input type="file" id="import-json-input" accept=".json,application/json" hidden>
-        <div id="import-result" style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.45;"></div>
+  <section id="page-backups" class="page">
+    <div class="card">
+      <div class="section-title">Export Excel CSV</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button class="btn btn-small" id="select-all-emp" style="flex:1;">Tout cocher</button>
+        <button class="btn btn-small" id="unselect-all-emp" style="flex:1;">Tout décocher</button>
       </div>
+      <div class="checkbox-grid" id="export-emp-list"></div>
+      <div class="section-title">Période</div>
+      <div class="date-row">
+        <div><div class="small-label">Début</div><input type="date" id="export-date-start"></div>
+        <div><div class="small-label">Fin</div><input type="date" id="export-date-end"></div>
+      </div>
+      <button class="btn btn-primary" id="export-btn">Télécharger le CSV</button>
+      <div class="section-title">Sauvegarde et restauration</div>
+      <div class="small-label" id="backup-status">Aucune sauvegarde hebdomadaire enregistrée.</div>
+      <button class="btn btn-primary" id="backup-json-btn" style="margin-top:8px;">Télécharger une sauvegarde JSON</button>
+      <div style="margin-top:12px;">
+        <label>Mode d’importation</label>
+        <select id="import-mode"><option value="merge">Fusionner avec les données actuelles</option><option value="replace">Remplacer toutes les données</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+        <button class="btn" id="import-csv-btn">Importer CSV</button><button class="btn" id="import-json-btn">Importer JSON</button>
+      </div>
+      <input type="file" id="import-csv-input" accept=".csv,text/csv" hidden>
+      <input type="file" id="import-json-input" accept=".json,application/json" hidden>
+      <div id="import-result" style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.45;"></div>
     </div>
   </section>
 
@@ -643,14 +644,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="comment-modal">
-  <div class="modal">
-    <h3 id="comment-title">Observation</h3>
-    <div class="small-label" id="comment-date"></div>
-    <div class="comment-modal-text" id="comment-full"></div>
-    <button class="btn btn-primary" id="comment-close">Fermer</button>
-  </div>
-</div>
+<div class="modal-backdrop" id="comment-modal"><div class="modal"><h3 id="comment-title">Observation</h3><div class="small-label" id="comment-date"></div><div class="comment-modal-text" id="comment-full"></div><button class="btn btn-primary" id="comment-close">Fermer</button></div></div>
 
 <script>
 const STORAGE_KEY = 'suivi_faits_v3';
@@ -761,12 +755,12 @@ function migrateFromV2() {
 const LAST_BACKUP_KEY = 'suivi_faits_last_backup_v3';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d || data)); }
-function two(n) { return String(n).padStart(2, '0'); }
-function dateFileFR(iso) { const [y,m,d]=iso.split('-'); return `${d}-${m}-${String(y).slice(-2)}`; }
-function backupFilename(date = new Date()) { return `employé-${two(date.getDate())}-${two(date.getMonth()+1)}-${String(date.getFullYear()).slice(-2)}.json`; }
-function buildBackupPayload() { return {app:'Suivi des faits',version:3,exportedAt:new Date().toISOString(),employees:data.employees,categories:data.categories,facts:data.facts}; }
-function downloadBlob(content, filename, type) { const blob=content instanceof Blob?content:new Blob([content],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500); }
-function downloadJSONBackup(markWeekly=true) { downloadBlob(JSON.stringify(buildBackupPayload(),null,2),backupFilename(),'application/json;charset=utf-8'); if(markWeekly)localStorage.setItem(LAST_BACKUP_KEY,String(Date.now())); updateBackupStatus(); }
+function two(n){return String(n).padStart(2,'0');}
+function dateFileFR(iso){const [y,m,d]=iso.split('-');return `${d}-${m}-${String(y).slice(-2)}`;}
+function backupFilename(date=new Date()){return `employé-${two(date.getDate())}-${two(date.getMonth()+1)}-${String(date.getFullYear()).slice(-2)}.json`;}
+function buildBackupPayload(){return{app:'Suivi des faits',version:3,exportedAt:new Date().toISOString(),employees:data.employees,categories:data.categories,facts:data.facts};}
+function downloadBlob(content,filename,type){const blob=content instanceof Blob?content:new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function downloadJSONBackup(markWeekly=true){downloadBlob(JSON.stringify(buildBackupPayload(),null,2),backupFilename(),'application/json;charset=utf-8');if(markWeekly)localStorage.setItem(LAST_BACKUP_KEY,String(Date.now()));updateBackupStatus();}
 function weeklyBackupDue(){const last=Number(localStorage.getItem(LAST_BACKUP_KEY)||0);return !last||Date.now()-last>=WEEK_MS;}
 function updateBackupStatus(){const el=document.getElementById('backup-status');if(!el)return;const last=Number(localStorage.getItem(LAST_BACKUP_KEY)||0);el.textContent=last?`Dernière sauvegarde JSON : ${new Date(last).toLocaleString('fr-CA')}`:'Aucune sauvegarde hebdomadaire enregistrée.';}
 function triggerWeeklyBackupIfDue(){if(weeklyBackupDue()){downloadJSONBackup(true);showToast('Sauvegarde hebdomadaire JSON préparée');}}
@@ -794,8 +788,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${page}`).classList.add('active');
-    if (page === 'reports') renderReportsList();
+    if (page === 'reports') { reportFilters.clear(); reportFilterEmpId = null; renderReportsList(); }
     if (page === 'settings') renderSettings();
+    if (page === 'backups') { renderExportPanel(); updateBackupStatus(); }
     window.scrollTo(0, 0);
   });
 });
@@ -1106,75 +1101,31 @@ function renderReportsList() {
 const reportFilters = new Set();
 let reportFilterEmpId = null;
 
+function reportEmployeeOrder(){return data.employees.filter(e=>e.active).sort((a,b)=>a.team!==b.team?(a.team==='production'?-1:1):a.name.localeCompare(b.name,'fr'));}
+function moveEmployee(currentId,delta){const list=reportEmployeeOrder();let i=list.findIndex(e=>e.id===currentId);if(i<0||!list.length)return;reportFilters.clear();reportFilterEmpId=null;showEmployeeReport(list[(i+delta+list.length)%list.length].id);}
 function showEmployeeReport(empId) {
-  const emp = data.employees.find(e => e.id === empId);
-  if (!emp) return;
-  if (reportFilterEmpId !== empId) { reportFilters.clear(); reportFilterEmpId = empId; }
-
-  document.getElementById('reports-list-view').style.display = 'none';
-  document.getElementById('reports-detail-view').style.display = 'block';
-  document.getElementById('report-employee-name').textContent = emp.name + (emp.active ? '' : ' (inactif)');
-
-  const facts = data.facts.filter(f => f.employeeId === empId);
-  const posFacts = facts.filter(f => f.type === 'positive');
-  const negFacts = facts.filter(f => f.type === 'negative');
-  const content = document.getElementById('report-content'); content.innerHTML = '';
-
-  const counts = arr => arr.reduce((o,f)=>(o[f.categoryId]=(o[f.categoryId]||0)+1,o),{});
-  const negEntries = Object.entries(counts(negFacts)).sort((a,b)=>b[1]-a[1]);
-  const posEntries = Object.entries(counts(posFacts)).sort((a,b)=>b[1]-a[1]);
-  const twoCol=document.createElement('div'); twoCol.className='report-two-col';
-
-  const buildCol=(side,total,entries)=>{
-    const col=document.createElement('div'); col.className='report-col '+side;
-    col.innerHTML=`<div class="col-head"><div class="col-total">${total}</div><div class="col-lbl">${side==='neg'?'🔴 Négatifs':'🟢 Positifs'}</div></div>`;
-    if(!entries.length){const e=document.createElement('div');e.className='col-empty';e.textContent='Aucun fait';col.appendChild(e);}
-    entries.forEach(([catId,count])=>{
-      const cat=data.categories.find(c=>c.id===catId); const row=document.createElement('div');
-      row.className='col-row'+(reportFilters.has(catId)?' active-filter':'');
-      row.innerHTML=`<span class="r-name">${escapeHTML(cat?cat.name:'(supprimée)')}</span><span class="r-count">${count}</span>`;
-      row.addEventListener('click',()=>{reportFilters.has(catId)?reportFilters.delete(catId):reportFilters.add(catId);showEmployeeReport(empId);});
-      col.appendChild(row);
-    });
-    return col;
-  };
-  twoCol.appendChild(buildCol('neg',negFacts.length,negEntries));
-  twoCol.appendChild(buildCol('pos',posFacts.length,posEntries)); content.appendChild(twoCol);
-
-  const shownFacts=reportFilters.size?facts.filter(f=>reportFilters.has(f.categoryId)):facts;
-  const histCard=document.createElement('div');histCard.className='card';
-  if(reportFilters.size){
-    const banner=document.createElement('div');banner.className='filter-banner show pos';
-    banner.innerHTML=`<span class="fb-text">${reportFilters.size} catégorie${reportFilters.size>1?'s':''} sélectionnée${reportFilters.size>1?'s':''} — <span class="fb-count">${shownFacts.length}</span> fait${shownFacts.length>1?'s':''}</span><button class="fb-clear">Tout afficher ✕</button>`;
-    banner.querySelector('.fb-clear').addEventListener('click',()=>{reportFilters.clear();showEmployeeReport(empId);});histCard.appendChild(banner);
-  } else {
-    const title=document.createElement('div');title.className='section-title';
-    title.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique complet';histCard.appendChild(title);
-  }
-  const sorted=[...shownFacts].sort((a,b)=>b.date!==a.date?b.date.localeCompare(a.date):(b.createdAt||'').localeCompare(a.createdAt||''));
-  if(!sorted.length){histCard.insertAdjacentHTML('beforeend','<div class="empty-state" style="padding:12px;">Aucun fait dans cette sélection.</div>');}
-  sorted.forEach(f=>{
-    const cat=data.categories.find(c=>c.id===f.categoryId);const item=document.createElement('div');
-    item.className='history-item '+(f.type==='positive'?'pos-border':'neg-border');
-    item.innerHTML=`<div class="meta"><div class="top-line"><span class="date">${formatDateFR(f.date)}</span><span class="cat">${escapeHTML(cat?cat.name:'(catégorie supprimée)')}</span></div><div class="remark">${escapeHTML(f.remark||'Aucune remarque')}</div></div><div class="item-actions"><button class="act-btn edit" aria-label="Modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><button class="act-btn delete" aria-label="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>`;
-    item.querySelector('.meta').addEventListener('click',()=>openCommentModal(f,cat));
-    item.querySelector('.act-btn.edit').addEventListener('click',e=>{e.stopPropagation();openEditModal(f.id,empId);});
-    item.querySelector('.act-btn.delete').addEventListener('click',e=>{e.stopPropagation();confirmAction('Confirmer la suppression ?','Ce fait sera définitivement supprimé. Cette action est irréversible.',()=>{data.facts=data.facts.filter(x=>x.id!==f.id);saveData();showEmployeeReport(empId);showToast('Fait supprimé');});});
-    histCard.appendChild(item);
-  });
-  content.appendChild(histCard);window.scrollTo(0,0);
+  const emp=data.employees.find(e=>e.id===empId);if(!emp)return;
+  if(reportFilterEmpId!==empId){reportFilters.clear();reportFilterEmpId=empId;}
+  document.getElementById('reports-list-view').style.display='none';document.getElementById('reports-detail-view').style.display='block';
+  const facts=data.facts.filter(f=>f.employeeId===empId),posFacts=facts.filter(f=>f.type==='positive'),negFacts=facts.filter(f=>f.type==='negative');
+  document.getElementById('report-employee-name').textContent=emp.name+(emp.active?'':' (inactif)');
+  document.getElementById('report-neg-total').textContent=negFacts.length;document.getElementById('report-pos-total').textContent=posFacts.length;
+  document.getElementById('prev-employee').onclick=()=>moveEmployee(empId,-1);document.getElementById('next-employee').onclick=()=>moveEmployee(empId,1);
+  const content=document.getElementById('report-content');content.innerHTML='';
+  const counts=a=>a.reduce((o,f)=>(o[f.categoryId]=(o[f.categoryId]||0)+1,o),{});
+  const two=document.createElement('div');two.className='report-two-col';
+  const build=(side,entries)=>{const col=document.createElement('div');col.className='report-col '+side;entries.forEach(([catId,count])=>{const cat=data.categories.find(c=>c.id===catId),row=document.createElement('div');row.className='col-row'+(reportFilters.has(catId)?' active-filter':'');row.innerHTML=`<span class="r-name">${escapeHTML(cat?cat.name:'(supprimée)')}</span><span class="r-count">${count}</span>`;row.onclick=()=>{reportFilters.has(catId)?reportFilters.delete(catId):reportFilters.add(catId);showEmployeeReport(empId);};col.appendChild(row);});if(!entries.length)col.innerHTML='<div class="col-empty">Aucun fait</div>';return col;};
+  two.appendChild(build('neg',Object.entries(counts(negFacts)).sort((a,b)=>b[1]-a[1])));two.appendChild(build('pos',Object.entries(counts(posFacts)).sort((a,b)=>b[1]-a[1])));content.appendChild(two);
+  const shown=reportFilters.size?facts.filter(f=>reportFilters.has(f.categoryId)):facts;
+  const card=document.createElement('div');card.className='card';const title=document.createElement('div');title.className='section-title';title.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique complet';card.appendChild(title);
+  const sorted=[...shown].sort((a,b)=>b.date!==a.date?b.date.localeCompare(a.date):(b.createdAt||'').localeCompare(a.createdAt||''));
+  if(!sorted.length)card.insertAdjacentHTML('beforeend','<div class="empty-state" style="padding:12px;">Aucun fait dans cette sélection.</div>');
+  sorted.forEach(f=>{const cat=data.categories.find(c=>c.id===f.categoryId),item=document.createElement('div');item.className='history-item '+(f.type==='positive'?'pos-border':'neg-border');item.innerHTML=`<div class="meta"><div class="top-line"><span class="date">${formatDateFR(f.date)}</span><span class="cat">${escapeHTML(cat?cat.name:'(catégorie supprimée)')}</span></div><div class="remark">${escapeHTML(f.remark||'Aucune remarque')}</div></div><div class="item-actions"><button class="act-btn edit" aria-label="Modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><button class="act-btn delete" aria-label="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>`;item.querySelector('.meta').onclick=()=>openCommentModal(f,cat);item.querySelector('.edit').onclick=e=>{e.stopPropagation();openEditModal(f.id,empId);};item.querySelector('.delete').onclick=e=>{e.stopPropagation();confirmAction('Confirmer la suppression ?','Ce fait sera définitivement supprimé. Cette action est irréversible.',()=>{data.facts=data.facts.filter(x=>x.id!==f.id);saveData();showEmployeeReport(empId);showToast('Fait supprimé');});};card.appendChild(item);});content.appendChild(card);window.scrollTo(0,0);
 }
 
-document.getElementById('back-to-reports').addEventListener('click', () => { reportFilters.clear(); reportFilterEmpId=null; renderReportsList(); });
 
-function openCommentModal(fact, cat) {
-  document.getElementById('comment-title').textContent = cat ? cat.name : 'Observation';
-  document.getElementById('comment-date').textContent = formatDateFR(fact.date);
-  document.getElementById('comment-full').textContent = fact.remark || 'Aucune remarque';
-  document.getElementById('comment-modal').classList.add('show');
-}
-document.getElementById('comment-close').addEventListener('click',()=>document.getElementById('comment-modal').classList.remove('show'));
-document.getElementById('comment-modal').addEventListener('click',e=>{if(e.target.id==='comment-modal')document.getElementById('comment-modal').classList.remove('show');});
+function openCommentModal(fact,cat){document.getElementById('comment-title').textContent=cat?cat.name:'Observation';document.getElementById('comment-date').textContent=formatDateFR(fact.date);document.getElementById('comment-full').textContent=fact.remark||'Aucune remarque';document.getElementById('comment-modal').classList.add('show');}
+document.getElementById('comment-close').onclick=()=>document.getElementById('comment-modal').classList.remove('show');document.getElementById('comment-modal').onclick=e=>{if(e.target.id==='comment-modal')e.currentTarget.classList.remove('show');};
 
 /* === Modal modification === */
 let editFactId = null;
@@ -1239,7 +1190,7 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
   });
 });
 
-function renderSettings() { renderEmployeesPanel(); renderCategoriesPanel(); renderExportPanel(); updateBackupStatus(); }
+function renderSettings() { renderEmployeesPanel(); renderCategoriesPanel(); }
 
 function renderEmployeesPanel() {
   const prodList = document.getElementById('settings-prod-list');
@@ -1377,20 +1328,16 @@ document.getElementById('export-btn').addEventListener('click', async () => {
 });
 
 /* === Sauvegarde JSON et import CSV / JSON === */
-document.getElementById('backup-json-btn').addEventListener('click',()=>downloadJSONBackup(true));
-document.getElementById('import-csv-btn').addEventListener('click',()=>document.getElementById('import-csv-input').click());
-document.getElementById('import-json-btn').addEventListener('click',()=>document.getElementById('import-json-input').click());
+document.getElementById('backup-json-btn').onclick=()=>downloadJSONBackup(true);document.getElementById('import-csv-btn').onclick=()=>document.getElementById('import-csv-input').click();document.getElementById('import-json-btn').onclick=()=>document.getElementById('import-json-input').click();
 function normalizeText(v){return String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
-function parseCSVRows(text){text=text.replace(/^\uFEFF/,'');const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'){if(quoted&&next==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===';'&&!quoted){row.push(cell);cell='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);cell='';if(row.some(x=>x.trim()!==''))rows.push(row);row=[];}else cell+=ch;}if(cell||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);}if(!rows.length)return[];const headers=rows.shift().map(normalizeText);return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])));}
+function parseCSVRows(text){text=text.replace(/^\uFEFF/,'');const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++;}else q=!q;}else if(c===';'&&!q){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);cell='';if(row.some(x=>x.trim()))rows.push(row);row=[];}else cell+=c;}if(cell||row.length){row.push(cell);if(row.some(x=>x.trim()))rows.push(row);}if(!rows.length)return[];const h=rows.shift().map(normalizeText);return rows.map(r=>Object.fromEntries(h.map((x,i)=>[x,r[i]??''])));}
 function frDateToISO(v){const m=String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${two(m[2])}-${two(m[1])}`:String(v).trim();}
-function factSignature(f){const e=data.employees.find(x=>x.id===f.employeeId),c=data.categories.find(x=>x.id===f.categoryId);return[f.date,normalizeText(e?.name),f.type,normalizeText(c?.name),normalizeText(f.remark)].join('|');}
-function applyImportMode(mode){if(mode==='replace')data=JSON.parse(JSON.stringify(DEFAULT_DATA));}
-function showImportStats(st){document.getElementById('import-result').textContent=`Import terminé : ${st.imported} observation(s), ${st.duplicates} doublon(s), ${st.employees} employé(s) ajouté(s), ${st.categories} catégorie(s) ajoutée(s), ${st.invalid} ligne(s) ignorée(s).`;showToast('Importation terminée');}
-function importCSVText(text,mode){const rows=parseCSVRows(text),st={imported:0,duplicates:0,employees:0,categories:0,invalid:0};applyImportMode(mode);const sigs=new Set(data.facts.map(factSignature));rows.forEach(r=>{const date=frDateToISO(r.date),name=r.employe,team=r.equipe,type=normalizeText(r.type).startsWith('pos')?'positive':normalizeText(r.type).startsWith('neg')?'negative':'',cn=r.categorie;if(!date||!name||!type||!cn){st.invalid++;return;}let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(name));if(!e){e={id:uid(),name:name.trim(),team:normalizeText(team).startsWith('rec')?'reception':'production',active:false};data.employees.push(e);st.employees++;}let c=data.categories.find(x=>x.type===type&&normalizeText(x.name)===normalizeText(cn));if(!c){c={id:uid(),name:cn.trim(),def:String(r.definition||'').trim(),type,active:true};data.categories.push(c);st.categories++;}const f={id:uid(),employeeId:e.id,team:e.team,type,categoryId:c.id,date,remark:String(r.remarque||'').trim(),createdAt:new Date().toISOString()};const sig=factSignature(f);if(sigs.has(sig)){st.duplicates++;return;}sigs.add(sig);data.facts.push(f);st.imported++;});saveData();renderSettings();showImportStats(st);}
-function importJSONText(text,mode){const inc=JSON.parse(text);if(!Array.isArray(inc.employees)||!Array.isArray(inc.categories)||!Array.isArray(inc.facts))throw Error('Format JSON non reconnu');const st={imported:0,duplicates:0,employees:0,categories:0,invalid:0};if(mode==='replace'){data={employees:inc.employees,categories:inc.categories,facts:inc.facts};st.imported=data.facts.length;}else{const em={},cm={};inc.employees.forEach(ie=>{let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(ie.name));if(!e){e={...ie,id:uid()};data.employees.push(e);st.employees++;}em[ie.id]=e.id;});inc.categories.forEach(ic=>{let c=data.categories.find(x=>x.type===ic.type&&normalizeText(x.name)===normalizeText(ic.name));if(!c){c={...ic,id:uid()};data.categories.push(c);st.categories++;}cm[ic.id]=c.id;});const sigs=new Set(data.facts.map(factSignature));inc.facts.forEach(f=>{const nf={...f,id:uid(),employeeId:em[f.employeeId]||f.employeeId,categoryId:cm[f.categoryId]||f.categoryId};const sig=factSignature(nf);if(sigs.has(sig)){st.duplicates++;return;}sigs.add(sig);data.facts.push(nf);st.imported++;});}saveData();renderSettings();showImportStats(st);}
-async function readSelectedFile(input,kind){const file=input.files?.[0];if(!file)return;try{const text=await file.text(),mode=document.getElementById('import-mode').value;kind==='csv'?importCSVText(text,mode):importJSONText(text,mode);}catch(e){document.getElementById('import-result').textContent='Import impossible : '+e.message;showToast('Import impossible');}finally{input.value='';}}
-document.getElementById('import-csv-input').addEventListener('change',e=>readSelectedFile(e.target,'csv'));
-document.getElementById('import-json-input').addEventListener('change',e=>readSelectedFile(e.target,'json'));
+function factSig(f){const e=data.employees.find(x=>x.id===f.employeeId),c=data.categories.find(x=>x.id===f.categoryId);return[f.date,normalizeText(e?.name),f.type,normalizeText(c?.name),normalizeText(f.remark)].join('|');}
+function statsText(st){document.getElementById('import-result').textContent=`Import terminé : ${st.i} observation(s), ${st.d} doublon(s), ${st.e} employé(s) ajouté(s), ${st.c} catégorie(s) ajoutée(s), ${st.x} ligne(s) ignorée(s).`;showToast('Importation terminée');}
+function importCSVText(text,mode){if(mode==='replace')data=JSON.parse(JSON.stringify(DEFAULT_DATA));const st={i:0,d:0,e:0,c:0,x:0},sigs=new Set(data.facts.map(factSig));parseCSVRows(text).forEach(r=>{const date=frDateToISO(r.date),name=r.employe,type=normalizeText(r.type).startsWith('pos')?'positive':normalizeText(r.type).startsWith('neg')?'negative':'',cn=r.categorie;if(!date||!name||!type||!cn){st.x++;return;}let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(name));if(!e){e={id:uid(),name:name.trim(),team:normalizeText(r.equipe).startsWith('rec')?'reception':'production',active:false};data.employees.push(e);st.e++;}let c=data.categories.find(x=>x.type===type&&normalizeText(x.name)===normalizeText(cn));if(!c){c={id:uid(),name:cn.trim(),def:String(r.definition||'').trim(),type,active:true};data.categories.push(c);st.c++;}const f={id:uid(),employeeId:e.id,team:e.team,type,categoryId:c.id,date,remark:String(r.remarque||'').trim(),createdAt:new Date().toISOString()},sig=factSig(f);if(sigs.has(sig)){st.d++;return;}sigs.add(sig);data.facts.push(f);st.i++;});saveData();statsText(st);}
+function importJSONText(text,mode){const inc=JSON.parse(text);if(!Array.isArray(inc.employees)||!Array.isArray(inc.categories)||!Array.isArray(inc.facts))throw Error('Format JSON non reconnu');if(mode==='replace'){data={employees:inc.employees,categories:inc.categories,facts:inc.facts};saveData();statsText({i:data.facts.length,d:0,e:0,c:0,x:0});return;}const st={i:0,d:0,e:0,c:0,x:0},em={},cm={};inc.employees.forEach(ie=>{let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(ie.name));if(!e){e={...ie,id:uid()};data.employees.push(e);st.e++;}em[ie.id]=e.id;});inc.categories.forEach(ic=>{let c=data.categories.find(x=>x.type===ic.type&&normalizeText(x.name)===normalizeText(ic.name));if(!c){c={...ic,id:uid()};data.categories.push(c);st.c++;}cm[ic.id]=c.id;});const sigs=new Set(data.facts.map(factSig));inc.facts.forEach(f=>{const nf={...f,id:uid(),employeeId:em[f.employeeId]||f.employeeId,categoryId:cm[f.categoryId]||f.categoryId},sig=factSig(nf);if(sigs.has(sig)){st.d++;return;}sigs.add(sig);data.facts.push(nf);st.i++;});saveData();statsText(st);}
+async function readSelectedFile(input,kind){const file=input.files?.[0];if(!file)return;try{const text=await file.text(),mode=document.getElementById('import-mode').value;kind==='csv'?importCSVText(text,mode):importJSONText(text,mode);}catch(e){document.getElementById('import-result').textContent='Import impossible : '+e.message;}finally{input.value='';}}
+document.getElementById('import-csv-input').onchange=e=>readSelectedFile(e.target,'csv');document.getElementById('import-json-input').onchange=e=>readSelectedFile(e.target,'json');
 
 /* === Confirmation générique === */
 let confirmCallback = null;
