@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Suivi faits">
+<link rel="apple-touch-icon" href="Icone%20suivi%20employ%C3%A9.png">
+<link rel="icon" type="image/png" href="Icone%20suivi%20employ%C3%A9.png">
 <meta name="theme-color" content="#ffffff">
 <title>Suivi des faits</title>
 <style>
@@ -553,6 +555,26 @@
           </svg>
           Partager / Télécharger CSV
         </button>
+
+        <div class="section-title">Sauvegarde et restauration</div>
+        <div class="small-label" id="backup-status">Aucune sauvegarde hebdomadaire enregistrée.</div>
+        <button class="btn btn-primary" id="backup-json-btn" style="margin-top:8px;">Télécharger une sauvegarde JSON</button>
+
+        <div style="margin-top:12px;">
+          <label>Mode d’importation</label>
+          <select id="import-mode">
+            <option value="merge">Fusionner avec les données actuelles</option>
+            <option value="replace">Remplacer toutes les données</option>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+          <button class="btn" id="import-csv-btn">Importer CSV</button>
+          <button class="btn" id="import-json-btn">Importer JSON</button>
+        </div>
+        <input type="file" id="import-csv-input" accept=".csv,text/csv" hidden>
+        <input type="file" id="import-json-input" accept=".json,application/json" hidden>
+        <div id="import-result" style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.45;"></div>
       </div>
     </div>
   </section>
@@ -716,7 +738,51 @@ function migrateFromV2() {
   return d;
 }
 
+const LAST_BACKUP_KEY = 'suivi_faits_last_backup_v3';
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
 function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d || data)); }
+
+function two(n) { return String(n).padStart(2, '0'); }
+function backupFilename(date = new Date()) {
+  return `employé-${two(date.getDate())}-${two(date.getMonth()+1)}-${String(date.getFullYear()).slice(-2)}.json`;
+}
+function buildBackupPayload() {
+  return {
+    app: 'Suivi des faits', version: 3, exportedAt: new Date().toISOString(),
+    employees: data.employees, categories: data.categories, facts: data.facts
+  };
+}
+function downloadBlob(content, filename, type) {
+  const blob = content instanceof Blob ? content : new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function downloadJSONBackup(markWeekly = true) {
+  downloadBlob(JSON.stringify(buildBackupPayload(), null, 2), backupFilename(), 'application/json;charset=utf-8');
+  if (markWeekly) localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
+  updateBackupStatus();
+}
+function weeklyBackupDue() {
+  const last = Number(localStorage.getItem(LAST_BACKUP_KEY) || 0);
+  return !last || Date.now() - last >= WEEK_MS;
+}
+function updateBackupStatus() {
+  const el = document.getElementById('backup-status');
+  if (!el) return;
+  const last = Number(localStorage.getItem(LAST_BACKUP_KEY) || 0);
+  el.textContent = last
+    ? `Dernière sauvegarde JSON : ${new Date(last).toLocaleString('fr-CA')}`
+    : 'Aucune sauvegarde hebdomadaire enregistrée.';
+}
+function triggerWeeklyBackupIfDue() {
+  if (weeklyBackupDue()) {
+    downloadJSONBackup(true);
+    showToast('Sauvegarde hebdomadaire JSON préparée');
+  }
+}
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
 function isoDate(d) {
@@ -960,6 +1026,7 @@ function commitFact(factDate) {
   };
   data.facts.push(fact);
   saveData();
+  triggerWeeklyBackupIfDue();
   if (navigator.vibrate) navigator.vibrate(20);
 
   if (fact.type === 'negative') {
@@ -1259,7 +1326,7 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
   });
 });
 
-function renderSettings() { renderEmployeesPanel(); renderCategoriesPanel(); renderExportPanel(); }
+function renderSettings() { renderEmployeesPanel(); renderCategoriesPanel(); renderExportPanel(); updateBackupStatus(); }
 
 function renderEmployeesPanel() {
   const prodList = document.getElementById('settings-prod-list');
@@ -1396,6 +1463,125 @@ document.getElementById('export-btn').addEventListener('click', async () => {
   showToast(`${filtered.length} fait${filtered.length > 1 ? 's' : ''} exporté${filtered.length > 1 ? 's' : ''}`);
 });
 
+
+/* === Sauvegarde JSON et import CSV / JSON === */
+document.getElementById('backup-json-btn').addEventListener('click', () => downloadJSONBackup(true));
+document.getElementById('import-csv-btn').addEventListener('click', () => document.getElementById('import-csv-input').click());
+document.getElementById('import-json-btn').addEventListener('click', () => document.getElementById('import-json-input').click());
+
+function normalizeText(v) {
+  return String(v ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function parseCSVRows(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const rows = []; let row = [], cell = '', quoted = false;
+  for (let i=0; i<text.length; i++) {
+    const ch=text[i], next=text[i+1];
+    if (ch==='"') {
+      if (quoted && next==='"') { cell+='"'; i++; } else quoted=!quoted;
+    } else if (ch===';' && !quoted) { row.push(cell); cell=''; }
+    else if ((ch==='\n' || ch==='\r') && !quoted) {
+      if (ch==='\r' && next==='\n') i++;
+      row.push(cell); cell='';
+      if (row.some(x => x.trim() !== '')) rows.push(row);
+      row=[];
+    } else cell+=ch;
+  }
+  if (cell || row.length) { row.push(cell); if (row.some(x=>x.trim()!=='')) rows.push(row); }
+  if (!rows.length) return [];
+  const headers=rows.shift().map(h=>normalizeText(h));
+  return rows.map(r => Object.fromEntries(headers.map((h,i)=>[h, r[i] ?? ''])));
+}
+function frDateToISO(v) {
+  const m=String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? `${m[3]}-${two(m[2])}-${two(m[1])}` : String(v).trim();
+}
+function factSignature(f, employees=data.employees, categories=data.categories) {
+  const e=employees.find(x=>x.id===f.employeeId);
+  const c=categories.find(x=>x.id===f.categoryId);
+  return [f.date, normalizeText(e?.name), f.type, normalizeText(c?.name), normalizeText(f.remark)].join('|');
+}
+function findOrCreateEmployee(name, team, stats) {
+  let emp=data.employees.find(e=>normalizeText(e.name)===normalizeText(name));
+  if (!emp) {
+    emp={id:uid(), name:name.trim(), team:normalizeText(team).startsWith('rec')?'reception':'production', active:false};
+    data.employees.push(emp); stats.employees++;
+  }
+  return emp;
+}
+function findOrCreateCategory(name, def, type, stats) {
+  let cat=data.categories.find(c=>c.type===type && normalizeText(c.name)===normalizeText(name));
+  if (!cat) {
+    cat={id:uid(), name:name.trim(), def:String(def||'').trim(), type, active:true};
+    data.categories.push(cat); stats.categories++;
+  } else if (!cat.def && def) cat.def=String(def).trim();
+  return cat;
+}
+function applyImportMode(mode) {
+  if (mode==='replace') data=JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function showImportStats(stats) {
+  const el=document.getElementById('import-result');
+  el.textContent=`Import terminé : ${stats.imported} observation(s) importée(s), ${stats.duplicates} doublon(s) ignoré(s), ${stats.employees} employé(s) ajouté(s) comme inactif(s), ${stats.categories} catégorie(s) ajoutée(s), ${stats.invalid} ligne(s) non reconnue(s).`;
+  showToast('Importation terminée');
+}
+function importCSVText(text, mode) {
+  const rows=parseCSVRows(text); const stats={imported:0,duplicates:0,employees:0,categories:0,invalid:0};
+  applyImportMode(mode);
+  let signatures=new Set(data.facts.map(f=>factSignature(f)));
+  rows.forEach(r=>{
+    const date=frDateToISO(r.date), name=r.employe, team=r.equipe;
+    const type=normalizeText(r.type).startsWith('pos')?'positive':normalizeText(r.type).startsWith('neg')?'negative':'';
+    const catName=r.categorie, def=r.definition||'', remark=r.remarque||'';
+    if (!date || !name || !type || !catName) { stats.invalid++; return; }
+    const emp=findOrCreateEmployee(name,team,stats);
+    const cat=findOrCreateCategory(catName,def,type,stats);
+    const fact={id:uid(),employeeId:emp.id,team:emp.team,type,categoryId:cat.id,date,remark:String(remark).trim(),createdAt:new Date().toISOString(),importedFrom:'csv'};
+    const sig=factSignature(fact);
+    if (signatures.has(sig)) { stats.duplicates++; return; }
+    signatures.add(sig); data.facts.push(fact); stats.imported++;
+  });
+  saveData(); renderSettings(); showImportStats(stats);
+}
+function importJSONText(text, mode) {
+  const incoming=JSON.parse(text);
+  if (!Array.isArray(incoming.employees)||!Array.isArray(incoming.categories)||!Array.isArray(incoming.facts)) throw new Error('Format JSON non reconnu');
+  const stats={imported:0,duplicates:0,employees:0,categories:0,invalid:0};
+  if (mode==='replace') {
+    data={employees:incoming.employees,categories:incoming.categories,facts:incoming.facts};
+    stats.imported=data.facts.length;
+  } else {
+    const empMap={}, catMap={};
+    incoming.employees.forEach(ie=>{
+      let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(ie.name));
+      if(!e){e={...ie,id:uid()};data.employees.push(e);stats.employees++;} empMap[ie.id]=e.id;
+    });
+    incoming.categories.forEach(ic=>{
+      let c=data.categories.find(x=>x.type===ic.type&&normalizeText(x.name)===normalizeText(ic.name));
+      if(!c){c={...ic,id:uid()};data.categories.push(c);stats.categories++;} catMap[ic.id]=c.id;
+    });
+    const signatures=new Set(data.facts.map(f=>factSignature(f)));
+    incoming.facts.forEach(f=>{
+      const nf={...f,id:uid(),employeeId:empMap[f.employeeId]||f.employeeId,categoryId:catMap[f.categoryId]||f.categoryId};
+      const sig=factSignature(nf);
+      if(signatures.has(sig)){stats.duplicates++;return;} signatures.add(sig);data.facts.push(nf);stats.imported++;
+    });
+  }
+  saveData(); renderSettings(); showImportStats(stats);
+}
+async function readSelectedFile(input, kind) {
+  const file=input.files?.[0]; if(!file) return;
+  try {
+    const text=await file.text(); const mode=document.getElementById('import-mode').value;
+    if(kind==='csv') importCSVText(text,mode); else importJSONText(text,mode);
+  } catch(e) {
+    document.getElementById('import-result').textContent='Import impossible : '+e.message;
+    showToast('Import impossible');
+  } finally { input.value=''; }
+}
+document.getElementById('import-csv-input').addEventListener('change', e=>readSelectedFile(e.target,'csv'));
+document.getElementById('import-json-input').addEventListener('change', e=>readSelectedFile(e.target,'json'));
+
 /* === Confirmation générique === */
 let confirmCallback = null;
 function confirmAction(title, message, onOk) {
@@ -1430,6 +1616,7 @@ document.addEventListener('touchend', (e) => {
 
 // Init
 goToStep('employee');
+updateBackupStatus();
 </script>
 </body>
 </html>
