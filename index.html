@@ -371,6 +371,22 @@
   .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .modal .field { margin-bottom: 14px; }
 
+
+  /* Historique compact + sélection multiple */
+  .history-item { min-height: 82px; align-items: center; padding: 10px 10px 10px 14px; cursor: pointer; }
+  .history-item .meta { display: grid; grid-template-rows: auto auto; gap: 5px; overflow: hidden; }
+  .history-item .top-line { display: flex; align-items: baseline; gap: 8px; margin: 0; flex-wrap: nowrap; min-width: 0; }
+  .history-item .date { font-size: 14px; flex-shrink: 0; }
+  .history-item .cat { font-size: 14px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-item.pos-border .cat { color: var(--positive-strong); }
+  .history-item.neg-border .cat { color: var(--negative-strong); }
+  .history-item .remark { margin: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); }
+  .history-item .item-actions { flex-direction: row; gap: 5px; }
+  .history-item .act-btn { width: 36px; height: 36px; }
+  .history-item .act-btn svg { width: 15px; height: 15px; }
+  .report-col .col-row.active-filter { box-shadow: inset 0 0 0 1px currentColor; }
+  .comment-modal-text { white-space: pre-wrap; user-select: text; -webkit-user-select: text; color: var(--text); font-size: 15px; line-height: 1.5; margin: 14px 0 18px; }
+
   @media (min-width: 600px) {
     main { max-width: 700px; margin: 0 auto; padding: 24px 24px calc(var(--safe-bottom) + 32px); }
     .header-inner { max-width: 700px; margin: 0 auto; }
@@ -385,7 +401,6 @@
 
 <header>
   <div class="header-inner">
-    <div class="app-title">Suivi des faits</div>
     <nav>
       <button class="nav-btn active" data-page="declare">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -465,7 +480,6 @@
   <!-- ============ PAGE 2 — RAPPORTS ============ -->
   <section id="page-reports" class="page">
     <div id="reports-list-view">
-      <h1 class="page-title">Rapports</h1>
       <div class="card">
         <div class="section-title with-bg-icon team-prod">Production</div>
         <div class="employee-grid" id="report-prod-grid"></div>
@@ -483,7 +497,6 @@
 
   <!-- ============ PAGE 3 — PARAMÈTRES ============ -->
   <section id="page-settings" class="page">
-    <h1 class="page-title">Paramètres</h1>
 
     <div class="settings-tabs">
       <button class="settings-tab active" data-panel="employees">Employés</button>
@@ -559,7 +572,6 @@
         <div class="section-title">Sauvegarde et restauration</div>
         <div class="small-label" id="backup-status">Aucune sauvegarde hebdomadaire enregistrée.</div>
         <button class="btn btn-primary" id="backup-json-btn" style="margin-top:8px;">Télécharger une sauvegarde JSON</button>
-
         <div style="margin-top:12px;">
           <label>Mode d’importation</label>
           <select id="import-mode">
@@ -567,7 +579,6 @@
             <option value="replace">Remplacer toutes les données</option>
           </select>
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
           <button class="btn" id="import-csv-btn">Importer CSV</button>
           <button class="btn" id="import-json-btn">Importer JSON</button>
@@ -629,6 +640,15 @@
       <button class="btn" id="edit-cancel">Annuler</button>
       <button class="btn btn-primary" id="edit-save" style="min-height:44px;">Enregistrer</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="comment-modal">
+  <div class="modal">
+    <h3 id="comment-title">Observation</h3>
+    <div class="small-label" id="comment-date"></div>
+    <div class="comment-modal-text" id="comment-full"></div>
+    <button class="btn btn-primary" id="comment-close">Fermer</button>
   </div>
 </div>
 
@@ -740,49 +760,16 @@ function migrateFromV2() {
 
 const LAST_BACKUP_KEY = 'suivi_faits_last_backup_v3';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
 function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d || data)); }
-
 function two(n) { return String(n).padStart(2, '0'); }
-function backupFilename(date = new Date()) {
-  return `employé-${two(date.getDate())}-${two(date.getMonth()+1)}-${String(date.getFullYear()).slice(-2)}.json`;
-}
-function buildBackupPayload() {
-  return {
-    app: 'Suivi des faits', version: 3, exportedAt: new Date().toISOString(),
-    employees: data.employees, categories: data.categories, facts: data.facts
-  };
-}
-function downloadBlob(content, filename, type) {
-  const blob = content instanceof Blob ? content : new Blob([content], {type});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-}
-function downloadJSONBackup(markWeekly = true) {
-  downloadBlob(JSON.stringify(buildBackupPayload(), null, 2), backupFilename(), 'application/json;charset=utf-8');
-  if (markWeekly) localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
-  updateBackupStatus();
-}
-function weeklyBackupDue() {
-  const last = Number(localStorage.getItem(LAST_BACKUP_KEY) || 0);
-  return !last || Date.now() - last >= WEEK_MS;
-}
-function updateBackupStatus() {
-  const el = document.getElementById('backup-status');
-  if (!el) return;
-  const last = Number(localStorage.getItem(LAST_BACKUP_KEY) || 0);
-  el.textContent = last
-    ? `Dernière sauvegarde JSON : ${new Date(last).toLocaleString('fr-CA')}`
-    : 'Aucune sauvegarde hebdomadaire enregistrée.';
-}
-function triggerWeeklyBackupIfDue() {
-  if (weeklyBackupDue()) {
-    downloadJSONBackup(true);
-    showToast('Sauvegarde hebdomadaire JSON préparée');
-  }
-}
+function dateFileFR(iso) { const [y,m,d]=iso.split('-'); return `${d}-${m}-${String(y).slice(-2)}`; }
+function backupFilename(date = new Date()) { return `employé-${two(date.getDate())}-${two(date.getMonth()+1)}-${String(date.getFullYear()).slice(-2)}.json`; }
+function buildBackupPayload() { return {app:'Suivi des faits',version:3,exportedAt:new Date().toISOString(),employees:data.employees,categories:data.categories,facts:data.facts}; }
+function downloadBlob(content, filename, type) { const blob=content instanceof Blob?content:new Blob([content],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500); }
+function downloadJSONBackup(markWeekly=true) { downloadBlob(JSON.stringify(buildBackupPayload(),null,2),backupFilename(),'application/json;charset=utf-8'); if(markWeekly)localStorage.setItem(LAST_BACKUP_KEY,String(Date.now())); updateBackupStatus(); }
+function weeklyBackupDue(){const last=Number(localStorage.getItem(LAST_BACKUP_KEY)||0);return !last||Date.now()-last>=WEEK_MS;}
+function updateBackupStatus(){const el=document.getElementById('backup-status');if(!el)return;const last=Number(localStorage.getItem(LAST_BACKUP_KEY)||0);el.textContent=last?`Dernière sauvegarde JSON : ${new Date(last).toLocaleString('fr-CA')}`:'Aucune sauvegarde hebdomadaire enregistrée.';}
+function triggerWeeklyBackupIfDue(){if(weeklyBackupDue()){downloadJSONBackup(true);showToast('Sauvegarde hebdomadaire JSON préparée');}}
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
 function isoDate(d) {
@@ -1116,12 +1103,13 @@ function renderReportsList() {
   if (!rec.children.length) rec.innerHTML = '<div class="empty-state">Aucun employé.</div>';
 }
 
-let reportFilter = null; // { empId, catId, type } ou null
+const reportFilters = new Set();
+let reportFilterEmpId = null;
 
 function showEmployeeReport(empId) {
   const emp = data.employees.find(e => e.id === empId);
   if (!emp) return;
-  if (!reportFilter || reportFilter.empId !== empId) reportFilter = null;
+  if (reportFilterEmpId !== empId) { reportFilters.clear(); reportFilterEmpId = empId; }
 
   document.getElementById('reports-list-view').style.display = 'none';
   document.getElementById('reports-detail-view').style.display = 'block';
@@ -1130,138 +1118,63 @@ function showEmployeeReport(empId) {
   const facts = data.facts.filter(f => f.employeeId === empId);
   const posFacts = facts.filter(f => f.type === 'positive');
   const negFacts = facts.filter(f => f.type === 'negative');
+  const content = document.getElementById('report-content'); content.innerHTML = '';
 
-  const content = document.getElementById('report-content');
-  content.innerHTML = '';
+  const counts = arr => arr.reduce((o,f)=>(o[f.categoryId]=(o[f.categoryId]||0)+1,o),{});
+  const negEntries = Object.entries(counts(negFacts)).sort((a,b)=>b[1]-a[1]);
+  const posEntries = Object.entries(counts(posFacts)).sort((a,b)=>b[1]-a[1]);
+  const twoCol=document.createElement('div'); twoCol.className='report-two-col';
 
-  const negCounts = {}; negFacts.forEach(f => { negCounts[f.categoryId] = (negCounts[f.categoryId] || 0) + 1; });
-  const posCounts = {}; posFacts.forEach(f => { posCounts[f.categoryId] = (posCounts[f.categoryId] || 0) + 1; });
-  const negEntries = Object.entries(negCounts).sort((a, b) => b[1] - a[1]);
-  const posEntries = Object.entries(posCounts).sort((a, b) => b[1] - a[1]);
-
-  const twoCol = document.createElement('div');
-  twoCol.className = 'report-two-col';
-
-  const buildCol = (side, total, entries) => {
-    const col = document.createElement('div');
-    col.className = 'report-col ' + side;
-    const lbl = side === 'neg' ? '🔴 Négatifs' : '🟢 Positifs';
-    const head = document.createElement('div');
-    head.className = 'col-head';
-    head.innerHTML = `<div class="col-total">${total}</div><div class="col-lbl">${lbl}</div>`;
-    col.appendChild(head);
-
-    if (!entries.length) {
-      const empty = document.createElement('div');
-      empty.className = 'col-empty';
-      empty.textContent = 'Aucun fait';
-      col.appendChild(empty);
-    } else {
-      entries.forEach(([catId, count]) => {
-        const cat = data.categories.find(c => c.id === catId);
-        const name = cat ? cat.name : '(supprimée)';
-        const row = document.createElement('div');
-        row.className = 'col-row';
-        if (reportFilter && reportFilter.catId === catId) row.classList.add('active-filter');
-        row.innerHTML = `<span class="r-name">${escapeHTML(name)}</span><span class="r-count">${count}</span>`;
-        row.addEventListener('click', () => {
-          if (reportFilter && reportFilter.catId === catId) {
-            reportFilter = null;
-          } else {
-            reportFilter = { empId: empId, catId: catId, type: (side === 'neg' ? 'negative' : 'positive') };
-          }
-          showEmployeeReport(empId);
-        });
-        col.appendChild(row);
-      });
-    }
+  const buildCol=(side,total,entries)=>{
+    const col=document.createElement('div'); col.className='report-col '+side;
+    col.innerHTML=`<div class="col-head"><div class="col-total">${total}</div><div class="col-lbl">${side==='neg'?'🔴 Négatifs':'🟢 Positifs'}</div></div>`;
+    if(!entries.length){const e=document.createElement('div');e.className='col-empty';e.textContent='Aucun fait';col.appendChild(e);}
+    entries.forEach(([catId,count])=>{
+      const cat=data.categories.find(c=>c.id===catId); const row=document.createElement('div');
+      row.className='col-row'+(reportFilters.has(catId)?' active-filter':'');
+      row.innerHTML=`<span class="r-name">${escapeHTML(cat?cat.name:'(supprimée)')}</span><span class="r-count">${count}</span>`;
+      row.addEventListener('click',()=>{reportFilters.has(catId)?reportFilters.delete(catId):reportFilters.add(catId);showEmployeeReport(empId);});
+      col.appendChild(row);
+    });
     return col;
   };
+  twoCol.appendChild(buildCol('neg',negFacts.length,negEntries));
+  twoCol.appendChild(buildCol('pos',posFacts.length,posEntries)); content.appendChild(twoCol);
 
-  twoCol.appendChild(buildCol('neg', negFacts.length, negEntries));
-  twoCol.appendChild(buildCol('pos', posFacts.length, posEntries));
-  content.appendChild(twoCol);
-
-  let shownFacts = facts;
-  if (reportFilter && reportFilter.catId) {
-    shownFacts = facts.filter(f => f.categoryId === reportFilter.catId);
-  }
-
-  const histCard = document.createElement('div');
-  histCard.className = 'card';
-
-  if (reportFilter && reportFilter.catId) {
-    const cat = data.categories.find(c => c.id === reportFilter.catId);
-    const banner = document.createElement('div');
-    banner.className = 'filter-banner show ' + (reportFilter.type === 'negative' ? 'neg' : 'pos');
-    banner.innerHTML = `
-      <span class="fb-text">${reportFilter.type === 'negative' ? '🔴' : '🟢'} ${escapeHTML(cat ? cat.name : '?')} — <span class="fb-count">${shownFacts.length}</span> fait${shownFacts.length > 1 ? 's' : ''}</span>
-      <button class="fb-clear">Tout afficher ✕</button>`;
-    banner.querySelector('.fb-clear').addEventListener('click', () => { reportFilter = null; showEmployeeReport(empId); });
-    histCard.appendChild(banner);
+  const shownFacts=reportFilters.size?facts.filter(f=>reportFilters.has(f.categoryId)):facts;
+  const histCard=document.createElement('div');histCard.className='card';
+  if(reportFilters.size){
+    const banner=document.createElement('div');banner.className='filter-banner show pos';
+    banner.innerHTML=`<span class="fb-text">${reportFilters.size} catégorie${reportFilters.size>1?'s':''} sélectionnée${reportFilters.size>1?'s':''} — <span class="fb-count">${shownFacts.length}</span> fait${shownFacts.length>1?'s':''}</span><button class="fb-clear">Tout afficher ✕</button>`;
+    banner.querySelector('.fb-clear').addEventListener('click',()=>{reportFilters.clear();showEmployeeReport(empId);});histCard.appendChild(banner);
   } else {
-    const title = document.createElement('div');
-    title.className = 'section-title';
-    title.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique complet`;
-    histCard.appendChild(title);
+    const title=document.createElement('div');title.className='section-title';
+    title.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique complet';histCard.appendChild(title);
   }
-
-  const sortedFacts = [...shownFacts].sort((a, b) => {
-    if (b.date !== a.date) return b.date.localeCompare(a.date);
-    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  const sorted=[...shownFacts].sort((a,b)=>b.date!==a.date?b.date.localeCompare(a.date):(b.createdAt||'').localeCompare(a.createdAt||''));
+  if(!sorted.length){histCard.insertAdjacentHTML('beforeend','<div class="empty-state" style="padding:12px;">Aucun fait dans cette sélection.</div>');}
+  sorted.forEach(f=>{
+    const cat=data.categories.find(c=>c.id===f.categoryId);const item=document.createElement('div');
+    item.className='history-item '+(f.type==='positive'?'pos-border':'neg-border');
+    item.innerHTML=`<div class="meta"><div class="top-line"><span class="date">${formatDateFR(f.date)}</span><span class="cat">${escapeHTML(cat?cat.name:'(catégorie supprimée)')}</span></div><div class="remark">${escapeHTML(f.remark||'Aucune remarque')}</div></div><div class="item-actions"><button class="act-btn edit" aria-label="Modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><button class="act-btn delete" aria-label="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>`;
+    item.querySelector('.meta').addEventListener('click',()=>openCommentModal(f,cat));
+    item.querySelector('.act-btn.edit').addEventListener('click',e=>{e.stopPropagation();openEditModal(f.id,empId);});
+    item.querySelector('.act-btn.delete').addEventListener('click',e=>{e.stopPropagation();confirmAction('Confirmer la suppression ?','Ce fait sera définitivement supprimé. Cette action est irréversible.',()=>{data.facts=data.facts.filter(x=>x.id!==f.id);saveData();showEmployeeReport(empId);showToast('Fait supprimé');});});
+    histCard.appendChild(item);
   });
-
-  if (!sortedFacts.length) {
-    const emptyDiv = document.createElement('div');
-    emptyDiv.className = 'empty-state';
-    emptyDiv.style.padding = '12px';
-    emptyDiv.textContent = reportFilter ? 'Aucun fait dans cette catégorie.' : 'Aucun fait enregistré.';
-    histCard.appendChild(emptyDiv);
-  } else {
-    sortedFacts.forEach(f => {
-      const cat = data.categories.find(c => c.id === f.categoryId);
-      const item = document.createElement('div');
-      item.className = 'history-item ' + (f.type === 'positive' ? 'pos-border' : 'neg-border');
-      const badgeClass = f.type === 'positive' ? 'positive' : 'negative';
-      const badgeText = f.type === 'positive' ? 'Positif' : 'Négatif';
-      item.innerHTML = `
-        <div class="meta">
-          <div class="top-line">
-            <span class="date">${formatDateFR(f.date)}</span>
-            <span class="type-badge ${badgeClass}">${badgeText}</span>
-          </div>
-          <div class="cat selectable">${escapeHTML(cat ? cat.name : '(catégorie supprimée)')}</div>
-          <div class="team">${f.team === 'production' ? 'Production' : 'Réception'}</div>
-          ${f.remark ? `<div class="remark selectable">${escapeHTML(f.remark)}</div>` : ''}
-        </div>
-        <div class="item-actions">
-          <button class="act-btn edit" aria-label="Modifier">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-          </button>
-          <button class="act-btn delete" aria-label="Supprimer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            </svg>
-          </button>
-        </div>`;
-      item.querySelector('.act-btn.edit').addEventListener('click', () => openEditModal(f.id, empId));
-      item.querySelector('.act-btn.delete').addEventListener('click', () => {
-        confirmAction('Confirmer la suppression ?', 'Ce fait sera définitivement supprimé. Cette action est irréversible.', () => {
-          data.facts = data.facts.filter(x => x.id !== f.id);
-          saveData(); showEmployeeReport(empId); showToast('Fait supprimé');
-        });
-      });
-      histCard.appendChild(item);
-    });
-  }
-  content.appendChild(histCard);
-  window.scrollTo(0, 0);
+  content.appendChild(histCard);window.scrollTo(0,0);
 }
 
-document.getElementById('back-to-reports').addEventListener('click', () => { reportFilter = null; renderReportsList(); });
+document.getElementById('back-to-reports').addEventListener('click', () => { reportFilters.clear(); reportFilterEmpId=null; renderReportsList(); });
+
+function openCommentModal(fact, cat) {
+  document.getElementById('comment-title').textContent = cat ? cat.name : 'Observation';
+  document.getElementById('comment-date').textContent = formatDateFR(fact.date);
+  document.getElementById('comment-full').textContent = fact.remark || 'Aucune remarque';
+  document.getElementById('comment-modal').classList.add('show');
+}
+document.getElementById('comment-close').addEventListener('click',()=>document.getElementById('comment-modal').classList.remove('show'));
+document.getElementById('comment-modal').addEventListener('click',e=>{if(e.target.id==='comment-modal')document.getElementById('comment-modal').classList.remove('show');});
 
 /* === Modal modification === */
 let editFactId = null;
@@ -1443,7 +1356,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
   rows.forEach(r => csvLines.push(r.map(escapeCSV).join(';')));
   const csv = '\uFEFF' + csvLines.join('\r\n');
 
-  const filename = `faits_employes_${dateStart}_${dateEnd}.csv`;
+  const filename = `employé.excel_${dateFileFR(dateStart)}_${dateFileFR(dateEnd)}.csv`;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 
   try {
@@ -1463,124 +1376,21 @@ document.getElementById('export-btn').addEventListener('click', async () => {
   showToast(`${filtered.length} fait${filtered.length > 1 ? 's' : ''} exporté${filtered.length > 1 ? 's' : ''}`);
 });
 
-
 /* === Sauvegarde JSON et import CSV / JSON === */
-document.getElementById('backup-json-btn').addEventListener('click', () => downloadJSONBackup(true));
-document.getElementById('import-csv-btn').addEventListener('click', () => document.getElementById('import-csv-input').click());
-document.getElementById('import-json-btn').addEventListener('click', () => document.getElementById('import-json-input').click());
-
-function normalizeText(v) {
-  return String(v ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-function parseCSVRows(text) {
-  text = text.replace(/^\uFEFF/, '');
-  const rows = []; let row = [], cell = '', quoted = false;
-  for (let i=0; i<text.length; i++) {
-    const ch=text[i], next=text[i+1];
-    if (ch==='"') {
-      if (quoted && next==='"') { cell+='"'; i++; } else quoted=!quoted;
-    } else if (ch===';' && !quoted) { row.push(cell); cell=''; }
-    else if ((ch==='\n' || ch==='\r') && !quoted) {
-      if (ch==='\r' && next==='\n') i++;
-      row.push(cell); cell='';
-      if (row.some(x => x.trim() !== '')) rows.push(row);
-      row=[];
-    } else cell+=ch;
-  }
-  if (cell || row.length) { row.push(cell); if (row.some(x=>x.trim()!=='')) rows.push(row); }
-  if (!rows.length) return [];
-  const headers=rows.shift().map(h=>normalizeText(h));
-  return rows.map(r => Object.fromEntries(headers.map((h,i)=>[h, r[i] ?? ''])));
-}
-function frDateToISO(v) {
-  const m=String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  return m ? `${m[3]}-${two(m[2])}-${two(m[1])}` : String(v).trim();
-}
-function factSignature(f, employees=data.employees, categories=data.categories) {
-  const e=employees.find(x=>x.id===f.employeeId);
-  const c=categories.find(x=>x.id===f.categoryId);
-  return [f.date, normalizeText(e?.name), f.type, normalizeText(c?.name), normalizeText(f.remark)].join('|');
-}
-function findOrCreateEmployee(name, team, stats) {
-  let emp=data.employees.find(e=>normalizeText(e.name)===normalizeText(name));
-  if (!emp) {
-    emp={id:uid(), name:name.trim(), team:normalizeText(team).startsWith('rec')?'reception':'production', active:false};
-    data.employees.push(emp); stats.employees++;
-  }
-  return emp;
-}
-function findOrCreateCategory(name, def, type, stats) {
-  let cat=data.categories.find(c=>c.type===type && normalizeText(c.name)===normalizeText(name));
-  if (!cat) {
-    cat={id:uid(), name:name.trim(), def:String(def||'').trim(), type, active:true};
-    data.categories.push(cat); stats.categories++;
-  } else if (!cat.def && def) cat.def=String(def).trim();
-  return cat;
-}
-function applyImportMode(mode) {
-  if (mode==='replace') data=JSON.parse(JSON.stringify(DEFAULT_DATA));
-}
-function showImportStats(stats) {
-  const el=document.getElementById('import-result');
-  el.textContent=`Import terminé : ${stats.imported} observation(s) importée(s), ${stats.duplicates} doublon(s) ignoré(s), ${stats.employees} employé(s) ajouté(s) comme inactif(s), ${stats.categories} catégorie(s) ajoutée(s), ${stats.invalid} ligne(s) non reconnue(s).`;
-  showToast('Importation terminée');
-}
-function importCSVText(text, mode) {
-  const rows=parseCSVRows(text); const stats={imported:0,duplicates:0,employees:0,categories:0,invalid:0};
-  applyImportMode(mode);
-  let signatures=new Set(data.facts.map(f=>factSignature(f)));
-  rows.forEach(r=>{
-    const date=frDateToISO(r.date), name=r.employe, team=r.equipe;
-    const type=normalizeText(r.type).startsWith('pos')?'positive':normalizeText(r.type).startsWith('neg')?'negative':'';
-    const catName=r.categorie, def=r.definition||'', remark=r.remarque||'';
-    if (!date || !name || !type || !catName) { stats.invalid++; return; }
-    const emp=findOrCreateEmployee(name,team,stats);
-    const cat=findOrCreateCategory(catName,def,type,stats);
-    const fact={id:uid(),employeeId:emp.id,team:emp.team,type,categoryId:cat.id,date,remark:String(remark).trim(),createdAt:new Date().toISOString(),importedFrom:'csv'};
-    const sig=factSignature(fact);
-    if (signatures.has(sig)) { stats.duplicates++; return; }
-    signatures.add(sig); data.facts.push(fact); stats.imported++;
-  });
-  saveData(); renderSettings(); showImportStats(stats);
-}
-function importJSONText(text, mode) {
-  const incoming=JSON.parse(text);
-  if (!Array.isArray(incoming.employees)||!Array.isArray(incoming.categories)||!Array.isArray(incoming.facts)) throw new Error('Format JSON non reconnu');
-  const stats={imported:0,duplicates:0,employees:0,categories:0,invalid:0};
-  if (mode==='replace') {
-    data={employees:incoming.employees,categories:incoming.categories,facts:incoming.facts};
-    stats.imported=data.facts.length;
-  } else {
-    const empMap={}, catMap={};
-    incoming.employees.forEach(ie=>{
-      let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(ie.name));
-      if(!e){e={...ie,id:uid()};data.employees.push(e);stats.employees++;} empMap[ie.id]=e.id;
-    });
-    incoming.categories.forEach(ic=>{
-      let c=data.categories.find(x=>x.type===ic.type&&normalizeText(x.name)===normalizeText(ic.name));
-      if(!c){c={...ic,id:uid()};data.categories.push(c);stats.categories++;} catMap[ic.id]=c.id;
-    });
-    const signatures=new Set(data.facts.map(f=>factSignature(f)));
-    incoming.facts.forEach(f=>{
-      const nf={...f,id:uid(),employeeId:empMap[f.employeeId]||f.employeeId,categoryId:catMap[f.categoryId]||f.categoryId};
-      const sig=factSignature(nf);
-      if(signatures.has(sig)){stats.duplicates++;return;} signatures.add(sig);data.facts.push(nf);stats.imported++;
-    });
-  }
-  saveData(); renderSettings(); showImportStats(stats);
-}
-async function readSelectedFile(input, kind) {
-  const file=input.files?.[0]; if(!file) return;
-  try {
-    const text=await file.text(); const mode=document.getElementById('import-mode').value;
-    if(kind==='csv') importCSVText(text,mode); else importJSONText(text,mode);
-  } catch(e) {
-    document.getElementById('import-result').textContent='Import impossible : '+e.message;
-    showToast('Import impossible');
-  } finally { input.value=''; }
-}
-document.getElementById('import-csv-input').addEventListener('change', e=>readSelectedFile(e.target,'csv'));
-document.getElementById('import-json-input').addEventListener('change', e=>readSelectedFile(e.target,'json'));
+document.getElementById('backup-json-btn').addEventListener('click',()=>downloadJSONBackup(true));
+document.getElementById('import-csv-btn').addEventListener('click',()=>document.getElementById('import-csv-input').click());
+document.getElementById('import-json-btn').addEventListener('click',()=>document.getElementById('import-json-input').click());
+function normalizeText(v){return String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function parseCSVRows(text){text=text.replace(/^\uFEFF/,'');const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'){if(quoted&&next==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===';'&&!quoted){row.push(cell);cell='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);cell='';if(row.some(x=>x.trim()!==''))rows.push(row);row=[];}else cell+=ch;}if(cell||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);}if(!rows.length)return[];const headers=rows.shift().map(normalizeText);return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])));}
+function frDateToISO(v){const m=String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${two(m[2])}-${two(m[1])}`:String(v).trim();}
+function factSignature(f){const e=data.employees.find(x=>x.id===f.employeeId),c=data.categories.find(x=>x.id===f.categoryId);return[f.date,normalizeText(e?.name),f.type,normalizeText(c?.name),normalizeText(f.remark)].join('|');}
+function applyImportMode(mode){if(mode==='replace')data=JSON.parse(JSON.stringify(DEFAULT_DATA));}
+function showImportStats(st){document.getElementById('import-result').textContent=`Import terminé : ${st.imported} observation(s), ${st.duplicates} doublon(s), ${st.employees} employé(s) ajouté(s), ${st.categories} catégorie(s) ajoutée(s), ${st.invalid} ligne(s) ignorée(s).`;showToast('Importation terminée');}
+function importCSVText(text,mode){const rows=parseCSVRows(text),st={imported:0,duplicates:0,employees:0,categories:0,invalid:0};applyImportMode(mode);const sigs=new Set(data.facts.map(factSignature));rows.forEach(r=>{const date=frDateToISO(r.date),name=r.employe,team=r.equipe,type=normalizeText(r.type).startsWith('pos')?'positive':normalizeText(r.type).startsWith('neg')?'negative':'',cn=r.categorie;if(!date||!name||!type||!cn){st.invalid++;return;}let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(name));if(!e){e={id:uid(),name:name.trim(),team:normalizeText(team).startsWith('rec')?'reception':'production',active:false};data.employees.push(e);st.employees++;}let c=data.categories.find(x=>x.type===type&&normalizeText(x.name)===normalizeText(cn));if(!c){c={id:uid(),name:cn.trim(),def:String(r.definition||'').trim(),type,active:true};data.categories.push(c);st.categories++;}const f={id:uid(),employeeId:e.id,team:e.team,type,categoryId:c.id,date,remark:String(r.remarque||'').trim(),createdAt:new Date().toISOString()};const sig=factSignature(f);if(sigs.has(sig)){st.duplicates++;return;}sigs.add(sig);data.facts.push(f);st.imported++;});saveData();renderSettings();showImportStats(st);}
+function importJSONText(text,mode){const inc=JSON.parse(text);if(!Array.isArray(inc.employees)||!Array.isArray(inc.categories)||!Array.isArray(inc.facts))throw Error('Format JSON non reconnu');const st={imported:0,duplicates:0,employees:0,categories:0,invalid:0};if(mode==='replace'){data={employees:inc.employees,categories:inc.categories,facts:inc.facts};st.imported=data.facts.length;}else{const em={},cm={};inc.employees.forEach(ie=>{let e=data.employees.find(x=>normalizeText(x.name)===normalizeText(ie.name));if(!e){e={...ie,id:uid()};data.employees.push(e);st.employees++;}em[ie.id]=e.id;});inc.categories.forEach(ic=>{let c=data.categories.find(x=>x.type===ic.type&&normalizeText(x.name)===normalizeText(ic.name));if(!c){c={...ic,id:uid()};data.categories.push(c);st.categories++;}cm[ic.id]=c.id;});const sigs=new Set(data.facts.map(factSignature));inc.facts.forEach(f=>{const nf={...f,id:uid(),employeeId:em[f.employeeId]||f.employeeId,categoryId:cm[f.categoryId]||f.categoryId};const sig=factSignature(nf);if(sigs.has(sig)){st.duplicates++;return;}sigs.add(sig);data.facts.push(nf);st.imported++;});}saveData();renderSettings();showImportStats(st);}
+async function readSelectedFile(input,kind){const file=input.files?.[0];if(!file)return;try{const text=await file.text(),mode=document.getElementById('import-mode').value;kind==='csv'?importCSVText(text,mode):importJSONText(text,mode);}catch(e){document.getElementById('import-result').textContent='Import impossible : '+e.message;showToast('Import impossible');}finally{input.value='';}}
+document.getElementById('import-csv-input').addEventListener('change',e=>readSelectedFile(e.target,'csv'));
+document.getElementById('import-json-input').addEventListener('change',e=>readSelectedFile(e.target,'json'));
 
 /* === Confirmation générique === */
 let confirmCallback = null;
